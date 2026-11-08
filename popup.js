@@ -71,6 +71,10 @@ function renderSavings() {
   $("pendingCount").textContent = state.pending.length;
 }
 
+function safeUrl(u) {
+  try { const x = new URL(u); return x.protocol === "http:" || x.protocol === "https:" ? x : null; } catch { return null; }
+}
+
 function renderPending() {
   const now = Date.now();
   const list = $("pendingList");
@@ -83,7 +87,20 @@ function renderPending() {
   for (const item of items) {
     const li = document.createElement("li");
     if (item.dueAt <= now) li.className = "due";
-    const t = document.createElement("div"); t.className = "t"; t.textContent = item.title || item.url;
+    const t = document.createElement("div"); t.className = "t";
+    const label = item.title || item.url || "Item";
+    const link = safeUrl(item.url);
+    let host = null;
+    if (link) {
+      const a = document.createElement("a"); a.className = "plink"; a.href = link.href; a.rel = "noopener"; a.target = "_blank";
+      a.append(document.createTextNode(label));
+      const ico = document.createElement("span"); ico.className = "ext";
+      ico.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>';
+      a.append(ico);
+      a.addEventListener("click", (e) => { e.preventDefault(); chrome.tabs.create({ url: link.href }); });
+      t.appendChild(a);
+      host = document.createElement("div"); host.className = "host"; host.textContent = link.hostname.replace(/^www\./, "");
+    } else t.textContent = label;
     const m = document.createElement("div"); m.className = "m";
     const known = typeof item.price === "number" && item.currency;
     const price = document.createElement("span"); price.className = "price" + (known ? "" : " unknown");
@@ -104,7 +121,7 @@ function renderPending() {
       await refresh();
     });
     row.append(want, skip);
-    li.append(t, m, row);
+    if (host) li.append(t, host, m, row); else li.append(t, m, row);
     list.appendChild(li);
   }
 }
