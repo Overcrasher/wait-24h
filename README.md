@@ -83,7 +83,9 @@ used when a price has an ambiguous or missing symbol.
     "buy":      ["#buy-btn", "button.add-to-cart"],
     "checkout": ["#place-order"],
     "title":    ["h1.product-title"],
-    "price":    [".price-now"]
+    "price":    [".price-now"],
+    "main":     ["#buybox"],
+    "card":     [".product-card"]
   }
 }
 ```
@@ -96,9 +98,18 @@ selectors miss, the text heuristic (EN + RO button texts) still catches common b
   so product-list and carousel buttons do not match.
 - `checkout`: place order / proceed to checkout buttons. The heuristic has separate buy and checkout
   phrase lists (EN + RO).
-- "I need this, continue" bypasses for 15 minutes (a) the specific product URL (origin + pathname) for
-  buy clicks and (b) checkout-type clicks on the same hostname, so add to cart -> checkout -> place order
-  is not nagged repeatedly. A buy click on a different product on the same site is paused again.
+- "I need this, continue" lets exactly that one click through and bypasses, for 15 minutes,
+  checkout-type clicks (proceed to checkout / place order) on the same hostname, so add to cart ->
+  checkout -> place order is not nagged repeatedly. Every buy / add-to-cart click is paused again,
+  whether it is the same product or another one (listing pages and carousels share one URL).
+- `main` (optional): selectors for the main buy box of a product page. A button inside it always
+  uses page-level title and price.
+- `card` (optional): product containers on listing pages, carousels and side sheets. A button inside a
+  card (and outside `main`) takes title and price from that card only, never from page-level data
+  (no JSON-LD / `itemprop`). `cardTitle` / `cardPrice` (optional) are tried inside the card first, then
+  `h2`, `h3`, `[class*='title']`, `a[title]`, `img[alt]` for the title and `price` for the price.
+  No price in the card means "price unknown" (nothing is counted as saved), never a page-level price.
+  Without `card`, the script looks at most 6 ancestors up for one holding exactly one distinct price.
 - `price`: only used when the page has no structured price. The content script first reads schema.org
   data (`itemprop="price"` + `priceCurrency`, then JSON-LD `Product` offers). From a price element,
   `<sup>` / `decimal` / `fraction` / `cents` parts are joined as decimals ("89<sup>99</sup> Lei" = 89.99).
@@ -125,7 +136,7 @@ All keys are optional; defaults apply on a fresh install.
 | `savings` | `{ [ISO currency]: number }` |
 | `itemsSkipped` | number |
 | `history` | `[{ title, price, currency, date }]`, last 200 |
-| `bypass` | `{ [hostname]: { checkoutUntil: epoch ms, urls: { [origin+pathname]: epoch ms } } }` – after "I need this, continue": that product URL and checkout-type clicks on the host are not paused until then (15 min) |
+| `bypass` | `{ [hostname]: { checkoutUntil: epoch ms } }` – after "I need this, continue": checkout-type clicks on the host are not paused until then (15 min). Buy / add-to-cart clicks are always paused. A legacy `urls` field is ignored |
 | `donation` | `{ asked: number[], lastAskAt: epoch ms, dontAskAgain: boolean }` |
 | `supporter` | boolean, set by `thanks.js` |
 

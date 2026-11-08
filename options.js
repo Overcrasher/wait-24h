@@ -21,11 +21,20 @@ async function init() {
   const wrap = $("sites");
   for (const s of sites) {
     const label = document.createElement("label");
+    label.className = "shop";
     const cb = document.createElement("input");
     cb.type = "checkbox";
+    cb.setAttribute("role", "switch");
     cb.checked = settings.sites[s.id] !== false;
     cb.addEventListener("change", () => { settings.sites[s.id] = cb.checked; save(); });
-    label.append(cb, " " + s.name);
+    const track = document.createElement("span"); track.className = "track"; track.setAttribute("aria-hidden", "true");
+    const text = document.createElement("span"); text.className = "shop-text";
+    const name = document.createElement("span"); name.className = "shop-name"; name.textContent = s.name;
+    const doms = s.domains || [];
+    const hint = document.createElement("span"); hint.className = "shop-dom";
+    hint.textContent = (doms[0] || "") + (doms.length > 1 ? " +" + (doms.length - 1) + " more" : "");
+    text.append(name, hint);
+    label.append(cb, track, text);
     wrap.appendChild(label);
   }
 

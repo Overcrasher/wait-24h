@@ -142,16 +142,12 @@ async function handle(msg) {
       await mutate(async () => {
         const { bypass } = await getAll();
         const now = Date.now();
-        // Shape: { [hostname]: { checkoutUntil: ms, urls: { [origin+pathname]: ms } } }
+        // Shape: { [hostname]: { checkoutUntil: ms } }. Old entries may carry `urls`; dropped here.
         for (const h of Object.keys(bypass)) {
           const b = bypass[h] || {};
-          for (const u of Object.keys(b.urls || {})) if (b.urls[u] < now) delete b.urls[u];
-          if (!(b.checkoutUntil > now) && !Object.keys(b.urls || {}).length) delete bypass[h];
+          if (!(b.checkoutUntil > now)) delete bypass[h]; else bypass[h] = { checkoutUntil: b.checkoutUntil };
         }
-        const entry = bypass[msg.hostname] || { checkoutUntil: 0, urls: {} };
-        entry.urls = entry.urls || {};
-        if (typeof msg.url === "string" && msg.url) entry.urls[msg.url] = now + BYPASS_MS;
-        entry.checkoutUntil = now + BYPASS_MS;
+        const entry = { checkoutUntil: now + BYPASS_MS };
         bypass[msg.hostname] = entry;
         await chrome.storage.local.set({ bypass });
       });

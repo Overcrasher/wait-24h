@@ -58,6 +58,29 @@
           "input[name='proceedToRetailCheckout']",
           "#sc-buy-box-ptc-button input"
         ],
+        "main": [
+          "#buybox",
+          "#desktop_buybox",
+          "#qualifiedBuybox",
+          "#mobile_buybox",
+          "#addToCart",
+          "#buyNow"
+        ],
+        "card": [
+          "[data-component-type='s-search-result']",
+          ".s-result-item[data-asin]:not([data-asin=''])",
+          ".a-carousel-card",
+          "[data-asin]:not([data-asin=''])"
+        ],
+        "cardTitle": [
+          "h2",
+          "[data-cy='title-recipe']",
+          ".p13n-sc-truncate"
+        ],
+        "cardPrice": [
+          ".a-price:not(.a-text-price) .a-offscreen",
+          ".a-price .a-offscreen"
+        ],
         "title": [
           "#productTitle",
           "#title"
@@ -87,6 +110,21 @@
           "[data-test='main-submit-button']"
         ],
         "checkout": [],
+        "main": [
+          ".main-product-form"
+        ],
+        "card": [
+          ".card-item",
+          ".card-v2",
+          "[data-product-id]"
+        ],
+        "cardTitle": [
+          ".card-v2-title",
+          "a.js-product-url"
+        ],
+        "cardPrice": [
+          ".product-new-price"
+        ],
         "title": [
           "h1.page-title",
           "h1"

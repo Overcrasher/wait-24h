@@ -6,17 +6,67 @@ const D = globalThis.WaitDonation;
 let state;
 
 function dueText(item, now) {
-  if (item.dueAt <= now) return "Ready for your decision";
+  if (item.dueAt <= now) return "due now";
   const mins = Math.ceil((item.dueAt - now) / 60000);
+  if (mins < 60) return "due in " + mins + "m";
   const h = Math.floor(mins / 60), m = mins % 60;
-  return "Due in " + (h ? h + "h " : "") + m + "m";
+  return "due in " + h + "h" + (h < 6 && m ? " " + m + "m" : "");
+}
+
+const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+let firstRender = true, countToken = 0;
+
+// Gentle count-up for the hero total; only on the first render after the popup opens.
+function countUp(el, target, currency) {
+  if (reducedMotion() || !(target > 0)) { el.textContent = formatMoney(target, currency); return; }
+  const start = performance.now(), dur = 600, token = ++countToken;
+  const step = (t) => {
+    if (token !== countToken) return;
+    const k = Math.min(1, (t - start) / dur);
+    const eased = 1 - Math.pow(1 - k, 3);
+    el.textContent = formatMoney(k < 1 ? target * eased : target, currency);
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function relDate(ts) {
+  const days = Math.floor((new Date().setHours(0, 0, 0, 0) - new Date(ts).setHours(0, 0, 0, 0)) / 86400000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return days + " days ago";
+  return new Date(ts).toLocaleDateString(navigator.language || "en", { month: "short", day: "numeric" });
+}
+
+function renderRecent() {
+  const list = $("recentList");
+  list.textContent = "";
+  const wins = state.history.filter((h) => h && typeof h.price === "number" && h.price > 0 && h.currency).slice(-3).reverse();
+  $("recentSection").hidden = wins.length === 0;
+  for (const w of wins) {
+    const li = document.createElement("li");
+    const ico = document.createElement("span"); ico.className = "ico";
+    ico.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>';
+    const t = document.createElement("span"); t.className = "rt"; t.textContent = w.title || "Item"; t.title = w.title || "";
+    const a = document.createElement("span"); a.className = "ra"; a.textContent = formatMoney(w.price, w.currency);
+    const d = document.createElement("span"); d.className = "rd"; d.textContent = relDate(w.date);
+    li.append(ico, t, a, d);
+    list.appendChild(li);
+  }
 }
 
 function renderSavings() {
   const main = state.settings.mainCurrency;
-  $("total").textContent = formatMoney(state.savings[main] || 0, main);
+  const mainTotal = state.savings[main] || 0;
+  if (firstRender) { firstRender = false; countUp($("total"), mainTotal, main); }
+  else { countToken++; $("total").textContent = formatMoney(mainTotal, main); }
   const others = Object.entries(state.savings).filter(([c, v]) => c !== main && v > 0);
-  $("others").textContent = others.map(([c, v]) => formatMoney(v, c)).join("  ·  ");
+  const wrap = $("others");
+  wrap.textContent = "";
+  for (const [c, v] of others) {
+    const chip = document.createElement("span"); chip.className = "chip"; chip.textContent = formatMoney(v, c);
+    wrap.appendChild(chip);
+  }
   $("skipped").textContent = state.itemsSkipped;
   $("pendingCount").textContent = state.pending.length;
 }
@@ -35,8 +85,12 @@ function renderPending() {
     if (item.dueAt <= now) li.className = "due";
     const t = document.createElement("div"); t.className = "t"; t.textContent = item.title || item.url;
     const m = document.createElement("div"); m.className = "m";
-    const price = typeof item.price === "number" && item.currency ? formatMoney(item.price, item.currency) : "price unknown";
-    m.textContent = price + " · " + dueText(item, now);
+    const known = typeof item.price === "number" && item.currency;
+    const price = document.createElement("span"); price.className = "price" + (known ? "" : " unknown");
+    price.textContent = known ? formatMoney(item.price, item.currency) : "price unknown";
+    const pill = document.createElement("span"); pill.className = "pill" + (item.dueAt <= now ? " due" : "");
+    pill.textContent = dueText(item, now);
+    m.append(price, pill);
     const row = document.createElement("div"); row.className = "row";
     const want = document.createElement("button"); want.type = "button"; want.className = "primary"; want.textContent = "Still want it";
     want.addEventListener("click", async () => {
@@ -44,7 +98,7 @@ function renderPending() {
       await chrome.runtime.sendMessage({ type: "keepItem", id: item.id });
       await refresh();
     });
-    const skip = document.createElement("button"); skip.type = "button"; skip.textContent = "Skip it";
+    const skip = document.createElement("button"); skip.type = "button"; skip.className = "skip"; skip.textContent = "Skip it";
     skip.addEventListener("click", async () => {
       await chrome.runtime.sendMessage({ type: "skipItem", id: item.id });
       await refresh();
@@ -75,7 +129,7 @@ async function maybeShowBanner() {
   const next = D.applyAsk(state.donation, milestone, now);
   state.donation = next;
   await chrome.storage.local.set({ donation: next });
-  $("banner-text").textContent = "You've saved " + formatMoney(milestone, main, true) +
+  $("banner-text").textContent = "You've kept " + formatMoney(milestone, main, true) +
     " with Wait 24h. Built by one developer, no ads, no tracking. If this helped, a coffee keeps it going.";
   renderDonateButtons($("banner-buttons"), main, total, $("banner-note"));
   $("banner").hidden = false;
@@ -83,7 +137,7 @@ async function maybeShowBanner() {
 
 async function refresh() {
   state = await getAll();
-  renderSavings(); renderPending(); renderPause();
+  renderSavings(); renderPending(); renderRecent(); renderPause();
   $("supporter").hidden = !state.supporter;
 }
 

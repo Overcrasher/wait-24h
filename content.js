@@ -8,7 +8,7 @@
   let config = null;           // site config from the service worker
   let settings = { sites: {}, minPrice: 0, delayHours: 24, mainCurrency: "EUR" };
   let pausedUntil = 0;
-  let bypass = {};             // { [hostname]: { checkoutUntil, urls: { [origin+pathname]: ms } } }
+  let bypass = {};             // { [hostname]: { checkoutUntil } }  (old `urls` field is ignored)
   let ready = false;           // state loaded; until then never intercept (fail open)
   let overlayOpen = false;
   const allowed = new WeakSet(); // elements whose next click must pass through
@@ -95,19 +95,23 @@
     }
     return out;
   }
-  function priceFromSelectors(def) {
-    for (const sel of ((config && config.selectors) || {}).price || []) {
+  function parseEl(el, def) {
+    const text = joinPriceParts(priceParts(el, []), def) || el.getAttribute("content") || "";
+    return text.trim() ? parsePrice(text, def) : null;
+  }
+  // First parseable price among `selectors`, searched inside `scope` (default: whole page).
+  function priceFromSelectors(def, selectors, scope) {
+    for (const sel of selectors || []) {
       try {
-        const el = document.querySelector(sel);
+        const el = (scope || document).querySelector(sel);
         if (!el) continue;
-        const text = joinPriceParts(priceParts(el, []), def) || el.getAttribute("content") || "";
-        const p = text.trim() ? parsePrice(text, def) : null;
+        const p = parseEl(el, def);
         if (p) return p;
       } catch (e) { /* ignore */ }
     }
     return null;
   }
-  // Schema.org data: the most reliable source across shops.
+  // Schema.org data: the most reliable source for the page's MAIN product (never used for cards).
   function priceFromStructured(def) {
     try {
       const metas = document.querySelectorAll("meta[itemprop='price'][content], [itemprop='price'][content]");
@@ -127,25 +131,93 @@
     }
     return null;
   }
-  function getProduct() {
+  const clean = (t) => String(t || "").replace(/\s+/g, " ").trim();
+
+  function pageProduct(def) {
     const sel = (config && config.selectors) || {};
     let title = firstText(sel.title);
     if (!title) {
       const og = document.querySelector("meta[property='og:title']");
       title = (og && og.content) || document.title || "";
     }
+    const price = priceFromStructured(def) || priceFromSelectors(def, sel.price);
+    return { title: clean(title), price };
+  }
+
+  const CARD_TITLE_DEFAULT = ["h2", "h3", "[class*='title']"];
+  function scopedTitle(scope) {
+    const sel = (config && config.selectors) || {};
+    for (const s of (sel.cardTitle || []).concat(CARD_TITLE_DEFAULT)) {
+      try {
+        const el = scope.querySelector(s);
+        const t = el && clean(el.textContent);
+        if (t) return t;
+      } catch (e) { /* ignore */ }
+    }
+    const a = scope.querySelector("a[title]");
+    if (a && clean(a.getAttribute("title"))) return clean(a.getAttribute("title"));
+    const img = scope.querySelector("img[alt]");
+    return img ? clean(img.getAttribute("alt")) : "";
+  }
+  // Title and price from inside one product container. Unknown price stays null.
+  function scopedProduct(scope, def) {
+    const sel = (config && config.selectors) || {};
+    const price = priceFromSelectors(def, (sel.cardPrice || []).concat(sel.price || []), scope);
+    return { title: scopedTitle(scope), price };
+  }
+  // Distinct parseable prices inside `scope` (by the site's price selectors).
+  function pricesIn(scope, def) {
+    const sels = ((config && config.selectors) || {}).price || [];
+    const els = new Set();
+    for (const s of sels) {
+      try { scope.querySelectorAll(s).forEach((e) => els.add(e)); } catch (e) { /* ignore */ }
+    }
+    const seen = new Set();
+    for (const e of els) {
+      let nested = false;
+      for (let p = e.parentElement; p && !nested; p = p.parentElement) nested = els.has(p);
+      if (nested) continue;
+      const p = parseEl(e, def);
+      if (p) seen.add(p.amount + " " + p.currency);
+    }
+    return seen.size;
+  }
+  function hasPageTitle() {
+    for (const s of ((config && config.selectors) || {}).title || []) {
+      try { if (document.querySelector(s)) return true; } catch (e) { /* ignore */ }
+    }
+    return false;
+  }
+
+  // Product for the clicked button: from its card on listing pages / carousels / side sheets,
+  // from page-level data on a product page. An unknown price is better than a wrong one.
+  function getProduct(el) {
+    const sel = (config && config.selectors) || {};
     const def = config && config.currency;
-    const price = priceFromStructured(def) || priceFromSelectors(def);
-    return { title: title.replace(/\s+/g, " ").trim(), price };
+    if (bySelector(el, sel.main)) return pageProduct(def);         // main buy box
+    const card = bySelector(el, sel.card);
+    if (card) return scopedProduct(card, def);
+    // Unknown context: smallest nearby ancestor holding exactly one distinct price.
+    let anc = el.parentElement;
+    for (let i = 0; anc && i < 6; i++, anc = anc.parentElement) {
+      if (pricesIn(anc, def) !== 1) continue;
+      let hasTitle = false;
+      for (const s of sel.title || []) {
+        try { if (anc.querySelector(s)) { hasTitle = true; break; } } catch (e) { /* ignore */ }
+      }
+      if (hasTitle) return pageProduct(def);                       // it is the page's own product
+      return scopedProduct(anc, def);
+    }
+    if (hasPageTitle()) return pageProduct(def);
+    return { title: "", price: null };
   }
 
   // ---- click handling ----
-  const pageKey = () => location.origin + location.pathname;
+  // Only checkout-type clicks (proceed to checkout / place order) are waved through after a
+  // "continue"; every buy / add-to-cart click is paused again, same product or not.
   function isBypassed(kind, now) {
     const b = bypass[host];
-    if (!b) return false;
-    if (kind === "checkout") return b.checkoutUntil > now;     // place order after a continue
-    return !!(b.urls && b.urls[pageKey()] > now);              // this product only
+    return kind === "checkout" && !!b && b.checkoutUntil > now;
   }
 
   function onClick(e) {
@@ -162,7 +234,7 @@
     if (settings.sites[config.siteId] === false) return;        // site disabled
     if (pausedUntil > now) return;                              // extension paused
     if (isBypassed(hit.kind, now)) return;                      // user just chose "continue"
-    const product = getProduct();
+    const product = getProduct(el);
     const p = product.price;
     if (p && p.currency === settings.mainCurrency && p.amount < settings.minPrice) return;
     block(e);
@@ -181,35 +253,66 @@
   // ---- overlay (Shadow DOM) ----
   const CSS = `
     :host { all: initial; }
-    .backdrop { position: fixed; inset: 0; background: rgba(20,24,40,.55); display: flex;
-      align-items: center; justify-content: center; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-    .card { box-sizing: border-box; width: min(420px, calc(100vw - 32px)); background: #fff; color: #1f2430;
-      border-radius: 18px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
-    h2 { margin: 0 0 4px; font-size: 20px; }
-    .sub { margin: 0 0 16px; font-size: 14px; color: #5b6275; }
-    .title { font-size: 15px; font-weight: 600; margin: 0 0 4px; word-break: break-word; }
-    .price { font-size: 26px; font-weight: 700; margin: 0 0 18px; color: #4f46e5; }
-    .err { margin: 12px 0 0; font-size: 13px; color: #b42318; }
-    .price.unknown { font-size: 15px; font-weight: 500; color: #5b6275; }
-    button { display: block; width: 100%; box-sizing: border-box; margin: 8px 0 0; padding: 12px 14px;
-      font: inherit; font-size: 15px; border-radius: 12px; cursor: pointer; border: 1px solid #d5d9e6;
-      background: #f4f5fa; color: inherit; }
-    button:hover { background: #eaecf6; }
-    button:focus-visible { outline: 3px solid #a5b4fc; outline-offset: 2px; }
-    button.primary { background: #4f46e5; border-color: #4f46e5; color: #fff; font-weight: 600; }
-    button.primary:hover { background: #4338ca; }
-    button.ghost { background: transparent; border-color: transparent; color: #5b6275; }
+    *, *::before, *::after { box-sizing: border-box; }
+    .backdrop { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px;
+      background: rgba(52,40,22,.55); color: #23282a; text-align: left; letter-spacing: normal; text-transform: none;
+      font: 15px/1.45 ui-rounded, "SF Pro Rounded", -apple-system, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased; animation: wt-fade .18s ease-out; }
+    @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .backdrop { background: rgba(52,40,22,.4); -webkit-backdrop-filter: blur(6px) saturate(.9); backdrop-filter: blur(6px) saturate(.9); }
+    }
+    .card { width: min(420px, 100%); max-height: 100%; overflow: auto; background: #fffdf9; color: #23282a;
+      border: 1px solid #e6dfd2; border-radius: 20px; padding: 24px;
+      box-shadow: 0 2px 6px rgba(60,45,20,.1), 0 24px 70px rgba(40,28,10,.35); animation: wt-rise .18s ease-out; }
+    .head { display: flex; align-items: center; gap: 14px; margin: 0 0 18px; }
+    .mark { flex: none; width: 44px; height: 44px; filter: drop-shadow(0 3px 6px rgba(11,94,87,.3)); }
+    h2 { margin: 0; font-size: 20px; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; color: inherit; }
+    .sub { margin: 3px 0 0; font-size: 14px; color: #5f6663; }
+    .product { background: #f7f3ec; border: 1px solid #e6dfd2; border-radius: 14px; padding: 12px 14px; margin: 0 0 16px; }
+    .title { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.3; word-break: break-word;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .price { margin: 6px 0 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -.02em; color: #0f766e;
+      font-variant-numeric: tabular-nums; }
+    .price.unknown { display: inline-block; font-size: 13px; font-weight: 600; letter-spacing: 0; color: #5f6663;
+      background: #ece6da; border-radius: 99px; padding: 2px 10px; margin-top: 8px; }
+    .err { margin: 12px 0 0; padding: 8px 12px; font-size: 13px; line-height: 1.35; color: #a12b1c; background: #fdeae6;
+      border: 1px solid #f3c3ba; border-radius: 10px; }
+    .err[hidden] { display: none; }
+    button { display: block; width: 100%; margin: 8px 0 0; padding: 12px 14px; font: inherit; font-size: 15px; font-weight: 600;
+      line-height: 1.2; border-radius: 12px; cursor: pointer; border: 1px solid #e6dfd2; background: #fffdf9; color: #23282a;
+      transition: background .15s, border-color .15s; }
+    button:hover { background: #f0ebe1; }
+    button:focus-visible { outline: 3px solid #0f766e; outline-offset: 2px; }
+    button:disabled { opacity: .6; cursor: default; }
+    button.primary { background: #0f766e; border-color: #0f766e; color: #fff; padding: 14px; }
+    button.primary:hover { background: #0b5e57; border-color: #0b5e57; }
+    button.ghost { background: transparent; border-color: transparent; color: #5f6663; font-weight: 500; }
+    button.ghost:hover { background: #f0ebe1; color: #23282a; }
+    @keyframes wt-fade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes wt-rise { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+    @media (max-width: 360px) { .card { padding: 18px; } .price { font-size: 24px; } }
+    @media (prefers-reduced-motion: reduce) { .backdrop, .card { animation: none; } button { transition: none; } }
     @media (prefers-color-scheme: dark) {
-      .card { background: #1e2230; color: #eceef7; }
-      .sub, .price.unknown, button.ghost { color: #a3a9bd; }
-      .price { color: #a5b4fc; }
-      .err { color: #fda29b; }
-      button { background: #2a2f42; border-color: #3a4058; }
-      button:hover { background: #343a52; }
-      button.primary { background: #6366f1; border-color: #6366f1; }
-      button.primary:hover { background: #4f52d9; }
+      .backdrop { background: rgba(5,9,8,.7); color: #edf1ee; }
+      @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        .backdrop { background: rgba(5,9,8,.5); }
+      }
+      .card { background: #1c2423; color: #edf1ee; border-color: #2e3b39; box-shadow: 0 2px 6px rgba(0,0,0,.3), 0 24px 70px rgba(0,0,0,.6); }
+      .sub, button.ghost { color: #a3b0ac; }
+      .product { background: #141a19; border-color: #2e3b39; }
+      .price { color: #5fd1b8; }
+      .price.unknown { color: #a3b0ac; background: #243030; }
+      .err { color: #ffb4a8; background: #3a1f1b; border-color: #5a2d27; }
+      button { background: #243030; border-color: #2e3b39; color: #edf1ee; }
+      button:hover { background: #2e3d3b; }
+      button:focus-visible { outline-color: #5fd1b8; }
+      button.primary { background: #5fd1b8; border-color: #5fd1b8; color: #08231e; }
+      button.primary:hover { background: #86e0cc; border-color: #86e0cc; }
       button.ghost { background: transparent; border-color: transparent; }
+      button.ghost:hover { background: #243030; color: #edf1ee; }
     }`;
+
+  const MARK_SVG = '<svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="wt-mk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b9588"/><stop offset="1" stop-color="#0b5e57"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#wt-mk)"/><path d="M9 6.5h14a1 1 0 0 1 0 2h-1c0 4.2-2.6 6.2-4.6 7.5 2 1.3 4.6 3.3 4.6 7.5h1a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h1c0-4.2 2.6-6.2 4.6-7.5C12.6 14.7 10 12.7 10 8.5H9a1 1 0 0 1 0-2z" fill="#fff8ec"/><path d="M12 23.5c.5-1.8 2-2.8 4-4 2 1.2 3.5 2.2 4 4z" fill="#f4b740"/><path d="M13.2 9c.4 1.5 1.3 2.3 2.8 3.2 1.5-.9 2.4-1.7 2.8-3.2z" fill="#f4b740"/></svg>';
 
   function formatPrice(p) {
     try { return new Intl.NumberFormat(navigator.language || "en", { style: "currency", currency: p.currency }).format(p.amount); }
@@ -238,15 +341,21 @@
     card.setAttribute("aria-modal", "true");
     card.setAttribute("aria-labelledby", "wt-h");
     const heading = h("h2", { id: "wt-h" }, "Wait a moment");
-    const sub = h("p", { className: "sub" }, "Is this something you really need right now?");
+    const sub = h("p", { className: "sub" }, "Do you really need this right now?");
     const titleEl = h("p", { className: "title" }, title || "This item");
     const priceEl = h("p", { className: "price" + (price ? "" : " unknown") }, price ? formatPrice(price) : "Price unknown");
     const bRemind = h("button", { className: "primary", type: "button" }, remindLabel(settings.delayHours));
     const bGo = h("button", { type: "button" }, "I need this, continue");
-    const bNever = h("button", { className: "ghost", type: "button" }, "Never mind");
+    const bNever = h("button", { className: "ghost", type: "button" }, "Never mind, I'll skip it");
     const errEl = h("p", { className: "err", role: "alert" });
     errEl.hidden = true;
-    card.append(heading, sub, titleEl, priceEl, bRemind, bGo, bNever, errEl);
+    const head = h("div", { className: "head" });
+    head.insertAdjacentHTML("beforeend", MARK_SVG);
+    const headText = h("div"); headText.append(heading, sub);
+    head.appendChild(headText);
+    const product_ = h("div", { className: "product" });
+    product_.append(titleEl, priceEl);
+    card.append(head, product_, bRemind, bGo, bNever, errEl);
     const backdrop = h("div", { className: "backdrop" });
     backdrop.appendChild(card);
     root.appendChild(backdrop);
@@ -284,11 +393,9 @@
       title: product.title, url: location.href, ...money() } }));
     bNever.addEventListener("click", () => save({ type: "never", title: product.title, ...money() }));
     bGo.addEventListener("click", async () => {
-      const now = Date.now(), key = pageKey();
-      const b = bypass[host] || { checkoutUntil: 0, urls: {} };
-      bypass[host] = { checkoutUntil: now + BYPASS_MS, urls: Object.assign({}, b.urls, { [key]: now + BYPASS_MS }) };
+      bypass[host] = { checkoutUntil: Date.now() + BYPASS_MS };
       close();
-      await request({ type: "continue", hostname: host, url: key });
+      await request({ type: "continue", hostname: host });
       allowed.add(triggerEl);
       triggerEl.click();
       setTimeout(() => allowed.delete(triggerEl), 1000);
