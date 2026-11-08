@@ -1,0 +1,15 @@
+:root { --bg:#f6f7fb; --fg:#1f2430; --muted:#6a7186; --card:#fff; --line:#e1e4ef; --accent:#4f46e5; }
+@media (prefers-color-scheme: dark) { :root { --bg:#14161f; --fg:#eceef7; --muted:#a3a9bd; --card:#1e2230; --line:#343a52; --accent:#6366f1; } }
+body { margin:0; background:var(--bg); color:var(--fg); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 560px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 22px; } h2 { font-size: 15px; margin: 0 0 8px; }
+section { background:var(--card); border:1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+label { display:block; margin: 4px 0; } .hint { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+input[type=number] { width: 90px; } input, select, button { font: inherit; }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.saved { font-size: 12px; font-weight: 400; color: var(--muted); opacity: 0; transition: opacity .3s; margin-left: 8px; }
+.saved.show { opacity: 1; }
+.support { opacity: .9; }
+.donate-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+button.donate { cursor:pointer; border:1px solid var(--line); background: transparent; color: var(--fg); border-radius: 10px; padding: 6px 14px; }
+button.donate.emphasized { border-color: var(--accent); font-weight: 700; }

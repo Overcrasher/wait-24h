@@ -1,0 +1,235 @@
+{
+  "sites": [
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "domains": [
+        "amazon.com",
+        "amazon.co.uk",
+        "amazon.de",
+        "amazon.fr",
+        "amazon.it",
+        "amazon.es",
+        "amazon.nl",
+        "amazon.pl",
+        "amazon.se",
+        "amazon.ca",
+        "amazon.com.au",
+        "amazon.co.jp",
+        "amazon.in",
+        "amazon.com.mx",
+        "amazon.com.br",
+        "amazon.com.tr",
+        "amazon.com.be",
+        "amazon.ie"
+      ],
+      "currency": "USD",
+      "currencies": {
+        "amazon.com": "USD",
+        "amazon.co.uk": "GBP",
+        "amazon.de": "EUR",
+        "amazon.fr": "EUR",
+        "amazon.it": "EUR",
+        "amazon.es": "EUR",
+        "amazon.nl": "EUR",
+        "amazon.pl": "PLN",
+        "amazon.se": "SEK",
+        "amazon.ca": "CAD",
+        "amazon.com.au": "AUD",
+        "amazon.co.jp": "JPY",
+        "amazon.in": "INR",
+        "amazon.com.mx": "MXN",
+        "amazon.com.br": "BRL",
+        "amazon.com.tr": "TRY",
+        "amazon.com.be": "EUR",
+        "amazon.ie": "EUR"
+      },
+      "selectors": {
+        "buy": [
+          "#buy-now-button",
+          "#add-to-cart-button",
+          "input[name='submit.buy-now']",
+          "input[name='submit.add-to-cart']"
+        ],
+        "checkout": [
+          "input[name='placeYourOrder1']",
+          "#submitOrderButtonId input",
+          "#placeYourOrder input",
+          "input[name='proceedToRetailCheckout']",
+          "#sc-buy-box-ptc-button input"
+        ],
+        "title": [
+          "#productTitle",
+          "#title"
+        ],
+        "price": [
+          "#corePrice_feature_div .a-price .a-offscreen",
+          "#corePriceDisplay_desktop_feature_div .a-price .a-offscreen",
+          ".a-price .a-offscreen",
+          "#priceblock_ourprice",
+          "#priceblock_dealprice"
+        ]
+      }
+    },
+    {
+      "id": "emag",
+      "name": "eMAG",
+      "domains": [
+        "emag.ro"
+      ],
+      "currency": "RON",
+      "selectors": {
+        "buy": [
+          ".main-product-form .yeahIWantThisProduct",
+          ".main-product-form button[data-offer-id]",
+          ".main-product-form .btn-buy",
+          ".main-product-form button.add-to-cart-btn",
+          "[data-test='main-submit-button']"
+        ],
+        "checkout": [],
+        "title": [
+          "h1.page-title",
+          "h1"
+        ],
+        "price": [
+          ".main-product-form .product-new-price",
+          ".product-new-price",
+          ".product-page-pricing .product-new-price"
+        ]
+      }
+    },
+    {
+      "id": "aliexpress",
+      "name": "AliExpress",
+      "domains": [
+        "aliexpress.com"
+      ],
+      "currency": "USD",
+      "selectors": {
+        "buy": [
+          "button[class*='buy-now']",
+          "button[class*='add-to-cart']",
+          "button[class*='addcart']"
+        ],
+        "checkout": [
+          "button[class*='place-order']",
+          "button[class*='placeorder']"
+        ],
+        "title": [
+          "h1[data-pl='product-title']",
+          "h1"
+        ],
+        "price": [
+          "[class*='price-default--current']",
+          "[class*='price--current']",
+          "[class*='Price_Price']"
+        ]
+      }
+    },
+    {
+      "id": "temu",
+      "name": "Temu",
+      "domains": [
+        "temu.com"
+      ],
+      "currency": "USD",
+      "selectors": {
+        "buy": [
+          "#add-to-cart",
+          "[data-testid='add-to-cart']",
+          "div[role='button'][aria-label*='add to cart' i]"
+        ],
+        "checkout": [],
+        "title": [
+          "[data-testid='goods-title']",
+          "h1"
+        ],
+        "price": [
+          "[data-testid='goods-price']",
+          "[class*='goods-price']"
+        ]
+      }
+    },
+    {
+      "id": "shein",
+      "name": "Shein",
+      "domains": [
+        "shein.com"
+      ],
+      "currency": "USD",
+      "selectors": {
+        "buy": [
+          ".product-intro__add-btn",
+          ".product-intro button[class*='add-cart']",
+          ".product-intro button[aria-label*='add to bag' i]"
+        ],
+        "checkout": [],
+        "title": [
+          ".product-intro__head-name",
+          "h1"
+        ],
+        "price": [
+          ".product-intro__head-mainprice .from",
+          ".product-intro__head-mainprice",
+          ".productPrice__main"
+        ]
+      }
+    },
+    {
+      "id": "ebay",
+      "name": "eBay",
+      "domains": [
+        "ebay.com",
+        "ebay.co.uk",
+        "ebay.de",
+        "ebay.fr",
+        "ebay.it",
+        "ebay.es",
+        "ebay.ca",
+        "ebay.com.au",
+        "ebay.pl",
+        "ebay.at",
+        "ebay.ch",
+        "ebay.ie",
+        "ebay.nl"
+      ],
+      "currency": "USD",
+      "currencies": {
+        "ebay.com": "USD",
+        "ebay.co.uk": "GBP",
+        "ebay.de": "EUR",
+        "ebay.fr": "EUR",
+        "ebay.it": "EUR",
+        "ebay.es": "EUR",
+        "ebay.ca": "CAD",
+        "ebay.com.au": "AUD",
+        "ebay.pl": "PLN",
+        "ebay.at": "EUR",
+        "ebay.ch": "CHF",
+        "ebay.ie": "EUR",
+        "ebay.nl": "EUR"
+      },
+      "selectors": {
+        "buy": [
+          "#binBtn_btn",
+          "#atcBtn_btn",
+          "[data-testid='x-bin-action'] a",
+          "[data-testid='x-atc-action'] a"
+        ],
+        "checkout": [
+          "#pay-now-btn"
+        ],
+        "title": [
+          "h1.x-item-title__mainTitle",
+          ".x-item-title__mainTitle",
+          "#itemTitle"
+        ],
+        "price": [
+          ".x-price-primary .ux-textspans",
+          ".x-bin-price__content .ux-textspans",
+          "#prcIsum"
+        ]
+      }
+    }
+  ]
+}

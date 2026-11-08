@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wait 24h</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>Wait 24h</h1>
+    <span id="supporter" class="badge" hidden>Supporter ❤</span>
+  </header>
+
+  <section id="banner" class="banner" hidden>
+    <button id="banner-close" class="x" type="button" aria-label="Dismiss">×</button>
+    <p id="banner-text"></p>
+    <div id="banner-buttons" class="donate-row"></div>
+    <p id="banner-note" class="note"></p>
+    <a id="banner-never" href="#" class="small-link">Don't ask again</a>
+  </section>
+
+  <section class="hero">
+    <div class="label">Saved so far</div>
+    <div id="total" class="big">–</div>
+    <div id="others" class="others"></div>
+  </section>
+
+  <section class="stats">
+    <div><strong id="skipped">0</strong><span>items skipped</span></div>
+    <div><strong id="pendingCount">0</strong><span>pending reminders</span></div>
+  </section>
+
+  <section id="pendingSection">
+    <h2>Pending</h2>
+    <ul id="pendingList" class="pending"></ul>
+    <p id="pendingEmpty" class="empty">Nothing waiting. Nice and calm.</p>
+  </section>
+
+  <section class="pause">
+    <label class="switch">
+      <input id="pause" type="checkbox">
+      <span>Pause for 1 hour</span>
+    </label>
+    <span id="pauseLeft" class="note"></span>
+  </section>
+
+  <footer><a id="optionsLink" href="options.html" target="_blank">Options</a></footer>
+
+  <script src="lib/donation.js"></script>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+{
+  "manifest_version": 3,
+  "name": "Wait 24h",
+  "version": "1.0.0",
+  "description": "Adds a pause before impulse purchases. Remind yourself tomorrow and keep track of the money you did not spend.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "*://*.amazon.com/*",
+    "*://*.amazon.co.uk/*",
+    "*://*.amazon.de/*",
+    "*://*.amazon.fr/*",
+    "*://*.amazon.it/*",
+    "*://*.amazon.es/*",
+    "*://*.amazon.nl/*",
+    "*://*.amazon.pl/*",
+    "*://*.amazon.se/*",
+    "*://*.amazon.ca/*",
+    "*://*.amazon.com.au/*",
+    "*://*.amazon.co.jp/*",
+    "*://*.amazon.in/*",
+    "*://*.amazon.com.mx/*",
+    "*://*.amazon.com.br/*",
+    "*://*.amazon.com.tr/*",
+    "*://*.amazon.com.be/*",
+    "*://*.amazon.ie/*",
+    "*://*.emag.ro/*",
+    "*://*.aliexpress.com/*",
+    "*://*.temu.com/*",
+    "*://*.shein.com/*",
+    "*://*.ebay.com/*",
+    "*://*.ebay.co.uk/*",
+    "*://*.ebay.de/*",
+    "*://*.ebay.fr/*",
+    "*://*.ebay.it/*",
+    "*://*.ebay.es/*",
+    "*://*.ebay.ca/*",
+    "*://*.ebay.com.au/*",
+    "*://*.ebay.pl/*",
+    "*://*.ebay.at/*",
+    "*://*.ebay.ch/*",
+    "*://*.ebay.ie/*",
+    "*://*.ebay.nl/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.amazon.com/*",
+        "*://*.amazon.co.uk/*",
+        "*://*.amazon.de/*",
+        "*://*.amazon.fr/*",
+        "*://*.amazon.it/*",
+        "*://*.amazon.es/*",
+        "*://*.amazon.nl/*",
+        "*://*.amazon.pl/*",
+        "*://*.amazon.se/*",
+        "*://*.amazon.ca/*",
+        "*://*.amazon.com.au/*",
+        "*://*.amazon.co.jp/*",
+        "*://*.amazon.in/*",
+        "*://*.amazon.com.mx/*",
+        "*://*.amazon.com.br/*",
+        "*://*.amazon.com.tr/*",
+        "*://*.amazon.com.be/*",
+        "*://*.amazon.ie/*",
+        "*://*.emag.ro/*",
+        "*://*.aliexpress.com/*",
+        "*://*.temu.com/*",
+        "*://*.shein.com/*",
+        "*://*.ebay.com/*",
+        "*://*.ebay.co.uk/*",
+        "*://*.ebay.de/*",
+        "*://*.ebay.fr/*",
+        "*://*.ebay.it/*",
+        "*://*.ebay.es/*",
+        "*://*.ebay.ca/*",
+        "*://*.ebay.com.au/*",
+        "*://*.ebay.pl/*",
+        "*://*.ebay.at/*",
+        "*://*.ebay.ch/*",
+        "*://*.ebay.ie/*",
+        "*://*.ebay.nl/*"
+      ],
+      "js": [
+        "lib/price.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://overcrasher.github.io/wait-24h/thanks.html*"
+      ],
+      "js": [
+        "thanks.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Wait 24h",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

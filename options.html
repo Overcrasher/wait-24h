@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wait 24h options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <h1>Wait 24h options <span id="saved" class="saved">Saved</span></h1>
+
+    <section>
+      <h2>Shops</h2>
+      <p class="hint">Turn the pause on or off per shop.</p>
+      <div id="sites"></div>
+    </section>
+
+    <section>
+      <h2>Minimum price</h2>
+      <label>Only pause above <input id="minPrice" type="number" min="0" step="1" value="0"> <span id="minCur">EUR</span></label>
+      <p class="hint">The threshold is interpreted in your main currency. Items priced in other currencies, or with an unknown price, are always paused.</p>
+    </section>
+
+    <section>
+      <h2>Reminder delay</h2>
+      <label><input type="radio" name="delay" value="12"> 12 hours</label>
+      <label><input type="radio" name="delay" value="24"> 24 hours</label>
+      <label><input type="radio" name="delay" value="48"> 48 hours</label>
+    </section>
+
+    <section>
+      <h2>Main currency</h2>
+      <select id="mainCurrency"></select>
+      <p class="hint">Savings are tracked per currency and never mixed. The main currency is shown as the big number and drives donation milestones.</p>
+    </section>
+
+    <section class="support">
+      <h2>Support this project</h2>
+      <p id="thanks" class="hint" hidden>Thank you for supporting Wait 24h ❤</p>
+      <p class="hint">Built by one developer, no ads, no tracking. Entirely optional.</p>
+      <div id="donate" class="donate-row"></div>
+      <p id="donate-note" class="hint"></p>
+    </section>
+  </main>
+  <script src="lib/donation.js"></script>
+  <script type="module" src="options.js"></script>
+</body>
+</html>
