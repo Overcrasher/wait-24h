@@ -10,5 +10,5 @@ export const DONATE_LINKS_USD = { small: "", medium: "", large: "", custom: "" }
 
 // Static GitHub Pages thank-you page (served from docs/thanks.html).
 // If the extension moves to another repo/username, change this AND the thanks.html match in
-// manifest.json (content_scripts).
+// manifest.json (content_scripts), then run tools/check_release.py.
 export const THANKS_URL = "https://overcrasher.github.io/wait-24h/thanks.html";

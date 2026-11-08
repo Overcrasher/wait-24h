@@ -13,6 +13,11 @@ donation state) in your browser's local extension storage (`chrome.storage.local
   entirely by Stripe on their own page; the extension never sees payment details.
 - The optional thank-you page only lets the extension mark you as a supporter locally
   (a flag stored on your device).
+- The thank-you page is hosted on GitHub Pages, so visiting it contacts GitHub (their
+  privacy policy applies). The extension itself still sends nothing.
+- Stripe processes donations on its own website; Wait 24h never sees or stores payment details.
+- When a paused item is due, the title of the item appears in an operating system
+  notification ("Still want it?"), which your OS may keep in its notification history.
 
 You can erase all data at any time by removing the extension.
 

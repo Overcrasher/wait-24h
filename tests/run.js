@@ -1,6 +1,7 @@
 // Run from the wait-24h folder:  jsc tests/run.js
 load("lib/price.js");
 load("lib/donation.js");
+load("lib/validate.js");
 
 let pass = 0, fail = 0;
 const failures = [];
@@ -132,6 +133,59 @@ eq("ld null", F(null), null);
 eq("ld huge", F({ "@type": "Product", offers: { price: 999999, priceCurrency: "EUR" } }), null);
 eq("struct meta", WaitPrice.structPrice("19.90", "EUR", null), { amount: 19.9, currency: "EUR" });
 eq("struct bad", WaitPrice.structPrice("", "EUR", null), null);
+
+// ---- validators
+const V = WaitValidate;
+eq("title strips control/newlines", V.cleanTitle("  a\n\tb\u0000c   d\u202e "), "a b c d");
+eq("title cap 200", V.cleanTitle("x".repeat(10000)).length, 200);
+eq("title non-string", V.cleanTitle(42), "");
+eq("price null", V.price(null), null);
+eq("price undefined", V.price(undefined), null);
+eq("price ok", V.price(12.5), 12.5);
+eq("price 1e308", V.price(1e308), undefined);
+eq("price max ok", V.price(100000), 100000);
+eq("price over max", V.price(100000.01), undefined);
+eq("price zero", V.price(0), undefined);
+eq("price negative", V.price(-1), undefined);
+eq("price NaN", V.price(NaN), undefined);
+eq("price string", V.price("5"), undefined);
+eq("currency ok", V.currency("EUR"), "EUR");
+eq("currency null", V.currency(null), null);
+eq("currency html", V.currency("<img>"), undefined);
+eq("currency lower", V.currency("eur"), undefined);
+eq("currency long", V.currency("EURO"), undefined);
+eq("url same host", V.urlOn("https://www.amazon.com/dp/X", "www.amazon.com"), "https://www.amazon.com/dp/X");
+eq("url other host", V.urlOn("https://evil.example/", "www.amazon.com"), null);
+eq("url javascript", V.urlOn("javascript:alert(1)", "www.amazon.com"), null);
+eq("url too long", V.urlOn("https://www.amazon.com/" + "a".repeat(2100), "www.amazon.com"), null);
+eq("url garbage", V.urlOn("not a url", "x"), null);
+eq("shopUrl fallback to tab", V.shopUrl("javascript:alert(1)", "https://www.amazon.com/dp/T", "www.amazon.com"), "https://www.amazon.com/dp/T");
+eq("shopUrl none", V.shopUrl("javascript:1", "javascript:2", "www.amazon.com"), null);
+eq("hostOf", V.hostOf("https://www.emag.ro/x?y=1"), "www.emag.ro");
+eq("matchesDomain sub", V.matchesDomain("www.amazon.com", "amazon.com"), true);
+eq("matchesDomain evil", V.matchesDomain("notamazon.com", "amazon.com"), false);
+eq("thanks url ok", V.isThanksUrl("https://overcrasher.github.io/wait-24h/thanks.html?session_id=x"), true);
+eq("thanks url other path", V.isThanksUrl("https://overcrasher.github.io/wait-24h/other.html"), false);
+eq("thanks url other origin", V.isThanksUrl("https://evil.github.io/wait-24h/thanks.html"), false);
+eq("thanks url http", V.isThanksUrl("http://overcrasher.github.io/wait-24h/thanks.html"), false);
+eq("session ok", V.validSession("cs_test_" + "a1B2".repeat(10)), true);
+eq("session live ok", V.validSession("cs_live_" + "Z".repeat(20)), true);
+eq("session short", V.validSession("cs_test_123"), false);
+eq("session bogus", V.validSession("bogus"), false);
+eq("session charset", V.validSession("cs_test_" + "a".repeat(19) + "-"), false);
+eq("settings defaults", V.sanitizeSettings(undefined), { sites: {}, minPrice: 0, delayHours: 24, mainCurrency: "EUR" });
+eq("settings coerced", V.sanitizeSettings({ delayHours: 7, minPrice: -3, sites: [1], mainCurrency: "eur" }), { sites: {}, minPrice: 0, delayHours: 24, mainCurrency: "EUR" });
+eq("settings kept", V.sanitizeSettings({ delayHours: 48, minPrice: 5.5, sites: { amazon: false, x: "no" }, mainCurrency: "USD" }), { sites: { amazon: false }, minPrice: 5.5, delayHours: 48, mainCurrency: "USD" });
+eq("savings filtered", V.sanitizeSavings({ EUR: 5, usd: 1, GBP: -1, JPY: "x", RON: Infinity }), { EUR: 5 });
+eq("savings non-object", V.sanitizeSavings("x"), {});
+const goodP = { id: "a", title: "T", url: "https://x.y/", price: 5, currency: "EUR", timestamp: 1, dueAt: 2, notified: false };
+eq("pending keeps good", V.sanitizePending([goodP, null, { id: 1 }, Object.assign({}, goodP, { currency: "x" }), Object.assign({}, goodP, { dueAt: NaN }), Object.assign({}, goodP, { price: "5" })]), [goodP]);
+eq("pending null price", V.sanitizePending([Object.assign({}, goodP, { price: null, currency: null })]).length, 1);
+eq("pending non-array", V.sanitizePending({}), []);
+eq("history keeps good + url", V.sanitizeHistory([{ title: "T", price: 5, currency: "EUR", date: 1, url: "https://x.y/a" }]), [{ title: "T", price: 5, currency: "EUR", date: 1, url: "https://x.y/a" }]);
+eq("history drops bad url field", V.sanitizeHistory([{ title: "T", price: null, currency: null, date: 1, url: "javascript:1" }]), [{ title: "T", price: null, currency: null, date: 1 }]);
+eq("history drops malformed", V.sanitizeHistory([{ title: 1, date: 1 }, { title: "T", date: "x" }, { title: "T", price: 1, currency: "bad", date: 1 }, 5]), []);
+eq("bypass sanitized", V.sanitizeBypass({ "a.com": { checkoutUntil: 5, urls: {} }, "b.com": { checkoutUntil: "x" }, "c.com": 1 }), { "a.com": { checkoutUntil: 5 } });
 
 print("passed " + pass + ", failed " + fail);
 failures.forEach((f) => print("FAIL " + f));

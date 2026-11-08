@@ -38,6 +38,21 @@ function relDate(ts) {
   return new Date(ts).toLocaleDateString(navigator.language || "en", { month: "short", day: "numeric" });
 }
 
+function safeUrl(u) {
+  try { const x = new URL(u); return x.protocol === "http:" || x.protocol === "https:" ? x : null; } catch { return null; }
+}
+
+// Title link (same look as the pending cards): opens in a new tab through chrome.tabs.create.
+function titleLink(label, link) {
+  const a = document.createElement("a"); a.className = "plink"; a.href = link.href; a.rel = "noopener"; a.target = "_blank";
+  a.append(document.createTextNode(label));
+  const ico = document.createElement("span"); ico.className = "ext";
+  ico.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>';
+  a.append(ico);
+  a.addEventListener("click", (e) => { e.preventDefault(); chrome.tabs.create({ url: link.href }); });
+  return a;
+}
+
 function renderRecent() {
   const list = $("recentList");
   list.textContent = "";
@@ -47,7 +62,10 @@ function renderRecent() {
     const li = document.createElement("li");
     const ico = document.createElement("span"); ico.className = "ico";
     ico.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>';
-    const t = document.createElement("span"); t.className = "rt"; t.textContent = w.title || "Item"; t.title = w.title || "";
+    const t = document.createElement("span"); t.className = "rt"; t.title = w.title || "";
+    const wl = safeUrl(w.url);
+    if (wl) { t.title = (w.title ? w.title + " - " : "") + wl.hostname.replace(/^www\./, ""); t.appendChild(titleLink(w.title || "Item", wl)); }
+    else t.textContent = w.title || "Item";
     const a = document.createElement("span"); a.className = "ra"; a.textContent = formatMoney(w.price, w.currency);
     const d = document.createElement("span"); d.className = "rd"; d.textContent = relDate(w.date);
     li.append(ico, t, a, d);
@@ -71,10 +89,6 @@ function renderSavings() {
   $("pendingCount").textContent = state.pending.length;
 }
 
-function safeUrl(u) {
-  try { const x = new URL(u); return x.protocol === "http:" || x.protocol === "https:" ? x : null; } catch { return null; }
-}
-
 function renderPending() {
   const now = Date.now();
   const list = $("pendingList");
@@ -92,12 +106,7 @@ function renderPending() {
     const link = safeUrl(item.url);
     let host = null;
     if (link) {
-      const a = document.createElement("a"); a.className = "plink"; a.href = link.href; a.rel = "noopener"; a.target = "_blank";
-      a.append(document.createTextNode(label));
-      const ico = document.createElement("span"); ico.className = "ext";
-      ico.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>';
-      a.append(ico);
-      a.addEventListener("click", (e) => { e.preventDefault(); chrome.tabs.create({ url: link.href }); });
+      const a = titleLink(label, link);
       t.appendChild(a);
       host = document.createElement("div"); host.className = "host"; host.textContent = link.hostname.replace(/^www\./, "");
     } else t.textContent = label;
@@ -111,7 +120,8 @@ function renderPending() {
     const row = document.createElement("div"); row.className = "row";
     const want = document.createElement("button"); want.type = "button"; want.className = "primary"; want.textContent = "Still want it";
     want.addEventListener("click", async () => {
-      chrome.tabs.create({ url: item.url });
+      if (!link) return;   // unsafe or malformed url: keep the item, do nothing
+      chrome.tabs.create({ url: link.href });
       await chrome.runtime.sendMessage({ type: "keepItem", id: item.id });
       await refresh();
     });

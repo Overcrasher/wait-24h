@@ -1,6 +1,17 @@
 // Service worker (module). Owns all mutations of pending items / savings.
 import { getAll, mutate, BYPASS_MS } from "./lib/store.js";
 
+const V = globalThis.WaitValidate; // defined by lib/validate.js (imported through store.js)
+const MAX_PENDING = 100;
+const FAIL = { ok: false };
+
+// Content scripts must not read or write storage: only trusted extension pages and this worker.
+async function lockStorage() {
+  try { await chrome.storage.local.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" }); }
+  catch (e) { console.warn("setAccessLevel failed", e); }
+}
+lockStorage();
+
 const ICON = "icons/icon128.png";
 const round2 = (n) => Math.round(n * 100) / 100;
 
@@ -29,37 +40,38 @@ async function getConfig(hostname) {
 }
 
 // ---- savings ----
-async function addSavings(title, price, currency) {
+async function addSavings(title, price, currency, url) {
   return mutate(async () => {
-    const d = await chrome.storage.local.get(["savings", "itemsSkipped", "history"]);
-    const savings = d.savings || {};
+    const { savings, itemsSkipped, history } = await getAll();
     // Only a known price in a known currency counts as money saved.
     if (typeof price === "number" && price > 0 && currency) {
       savings[currency] = round2((savings[currency] || 0) + price);
     }
-    const history = (d.history || []).concat({
-      title: title || "", price: typeof price === "number" ? price : null,
-      currency: currency || null, date: Date.now(),
-    }).slice(-200);
-    await chrome.storage.local.set({ savings, itemsSkipped: (d.itemsSkipped || 0) + 1, history });
+    const entry = { title: V.cleanTitle(title), price: typeof price === "number" ? price : null,
+      currency: currency || null, date: Date.now() };
+    if (url) entry.url = url;
+    await chrome.storage.local.set({ savings, itemsSkipped: itemsSkipped + 1, history: history.concat(entry).slice(-200) });
   });
 }
 
 // ---- reminders ----
+// Returns the item id, or null if the pending list is full. Same URL again updates the existing item.
 async function addReminder(item) {
   return mutate(async () => {
     const { settings, pending } = await getAll();
     const now = Date.now();
-    const entry = {
-      id: crypto.randomUUID(),
-      title: item.title || "",
-      url: item.url,
-      price: typeof item.price === "number" ? item.price : null,
-      currency: item.currency || null,
-      timestamp: now,
-      dueAt: now + settings.delayHours * 3600 * 1000,
-      notified: false,
-    };
+    const fields = { title: item.title, url: item.url, price: item.price, currency: item.currency,
+      timestamp: now, dueAt: now + settings.delayHours * 3600 * 1000, notified: false };
+    const existing = pending.find((p) => p.url === item.url);
+    if (existing) {
+      Object.assign(existing, fields);
+      await chrome.storage.local.set({ pending });
+      chrome.notifications.clear(existing.id);
+      chrome.alarms.create("reminder:" + existing.id, { when: existing.dueAt });
+      return existing.id;
+    }
+    if (pending.length >= MAX_PENDING) return null;
+    const entry = Object.assign({ id: crypto.randomUUID() }, fields);
     await chrome.storage.local.set({ pending: pending.concat(entry) });
     chrome.alarms.create("reminder:" + entry.id, { when: entry.dueAt });
     return entry.id;
@@ -108,8 +120,8 @@ async function reconcile() {
   }
 }
 
-chrome.runtime.onInstalled.addListener(reconcile);
-chrome.runtime.onStartup.addListener(reconcile);
+chrome.runtime.onInstalled.addListener(() => { lockStorage(); reconcile(); });
+chrome.runtime.onStartup.addListener(() => { lockStorage(); reconcile(); });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (!alarm.name.startsWith("reminder:")) return;
@@ -128,46 +140,120 @@ chrome.notifications.onClicked.addListener(async (id) => {
   }
 });
 
+// ---- state pushed to content scripts ----
+async function currentState() {
+  const { settings, pausedUntil, bypass } = await getAll();
+  return { settings, pausedUntil, bypass };
+}
+async function broadcastState() {
+  try {
+    const state = await currentState();
+    const tabs = await chrome.tabs.query({}); // no "tabs" permission: ids only, which is all we need
+    for (const t of tabs) {
+      if (t.id == null) continue;
+      chrome.tabs.sendMessage(t.id, Object.assign({ type: "state" }, state)).catch(() => {});
+    }
+  } catch (e) { /* ignore */ }
+}
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+  if ("settings" in changes || "pausedUntil" in changes || "bypass" in changes) broadcastState();
+});
+
 // ---- messages ----
-async function handle(msg) {
-  switch (msg && msg.type) {
-    case "getConfig":
-      return { config: await getConfig(msg.hostname) };
-    case "remind":
-      return { ok: true, id: await addReminder(msg.item) };
-    case "never":
-      await addSavings(msg.title, msg.price, msg.currency);
+// Sender classes: "extension" (popup/options pages, sender.url on our origin) and "content"
+// (content scripts: sender.tab set, web url). Anything else is rejected.
+function classify(sender) {
+  if (!sender || sender.id !== chrome.runtime.id) return null;
+  if (typeof sender.url === "string" && sender.url.startsWith("chrome-extension://" + chrome.runtime.id + "/")) {
+    return { kind: "extension" };
+  }
+  if (sender.tab && typeof sender.tab.url === "string") return { kind: "content", tabUrl: sender.tab.url };
+  return null;
+}
+
+const validId = (id) => typeof id === "string" && id.length > 0 && id.length <= 100;
+
+async function handleExtension(msg) {
+  switch (msg.type) {
+    case "skipItem": {
+      if (!validId(msg.id)) return FAIL;
+      const item = await takePending(msg.id);
+      if (item) await addSavings(item.title, item.price, item.currency, V.urlOn(item.url));
       return { ok: true };
+    }
+    case "keepItem":
+      if (!validId(msg.id)) return FAIL;
+      await takePending(msg.id);
+      return { ok: true };
+    default:
+      return FAIL;
+  }
+}
+
+// Title/price/currency from an untrusted message; null if any field is invalid.
+function readProduct(src) {
+  if (!src || typeof src !== "object") return null;
+  if (src.title !== undefined && typeof src.title !== "string") return null;
+  const price = V.price(src.price), currency = V.currency(src.currency);
+  if (price === undefined || currency === undefined) return null;
+  if (price !== null && currency === null) return null; // a price needs its currency
+  return { title: V.cleanTitle(src.title || ""), price, currency };
+}
+
+async function handleContent(msg, ctx) {
+  if (msg.type === "supporter") {
+    // Cosmetic flag, honour system: only from the real thank-you page with a Stripe-shaped session id.
+    if (!V.isThanksUrl(ctx.tabUrl) || !V.validSession(msg.sessionId)) return FAIL;
+    await chrome.storage.local.set({ supporter: true });
+    return { ok: true };
+  }
+  // Everything else: the host comes from the sender's tab, never from the message.
+  const proto = (() => { try { return new URL(ctx.tabUrl).protocol; } catch (e) { return ""; } })();
+  const host = proto === "https:" ? V.hostOf(ctx.tabUrl) : null;
+  if (!host) return FAIL;
+  const config = await getConfig(host);
+  if (!config) return FAIL;
+  switch (msg.type) {
+    case "getConfig":
+      return { config };
+    case "getState":
+      return Object.assign({ ok: true }, await currentState());
+    case "remind": {
+      const p = readProduct(msg.item);
+      const url = V.shopUrl(msg.item && msg.item.url, ctx.tabUrl, host);
+      if (!p || !url) return FAIL;
+      const id = await addReminder(Object.assign(p, { url }));
+      return id ? { ok: true, id } : FAIL;
+    }
+    case "never": {
+      const p = readProduct(msg);
+      if (!p) return FAIL;
+      await addSavings(p.title, p.price, p.currency, V.shopUrl(msg.url, ctx.tabUrl, host));
+      return { ok: true };
+    }
     case "continue":
       await mutate(async () => {
         const { bypass } = await getAll();
         const now = Date.now();
-        // Shape: { [hostname]: { checkoutUntil: ms } }. Old entries may carry `urls`; dropped here.
-        for (const h of Object.keys(bypass)) {
-          const b = bypass[h] || {};
-          if (!(b.checkoutUntil > now)) delete bypass[h]; else bypass[h] = { checkoutUntil: b.checkoutUntil };
-        }
-        const entry = { checkoutUntil: now + BYPASS_MS };
-        bypass[msg.hostname] = entry;
+        // Shape: { [hostname]: { checkoutUntil: ms } }. Expired entries are pruned; only this host is set.
+        for (const h of Object.keys(bypass)) if (!(bypass[h].checkoutUntil > now)) delete bypass[h];
+        bypass[host] = { checkoutUntil: now + BYPASS_MS };
         await chrome.storage.local.set({ bypass });
       });
       return { ok: true };
-    case "skipItem": {
-      const item = await takePending(msg.id);
-      if (item) await addSavings(item.title, item.price, item.currency);
-      return { ok: true };
-    }
-    case "keepItem":
-      await takePending(msg.id);
-      return { ok: true };
     default:
-      return { error: "unknown message" };
+      return FAIL;
   }
 }
 
+async function handle(msg, sender) {
+  const ctx = classify(sender);
+  if (!ctx || !msg || typeof msg !== "object" || typeof msg.type !== "string") return FAIL;
+  return ctx.kind === "extension" ? handleExtension(msg) : handleContent(msg, ctx);
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  // Only accept messages from our own extension contexts.
-  if (sender.id !== chrome.runtime.id) return false;
-  handle(msg).then(sendResponse).catch((e) => sendResponse({ error: String(e) }));
+  handle(msg, sender).then(sendResponse).catch(() => sendResponse(FAIL));
   return true;
 });

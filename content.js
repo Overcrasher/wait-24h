@@ -11,26 +11,37 @@
   let bypass = {};             // { [hostname]: { checkoutUntil } }  (old `urls` field is ignored)
   let ready = false;           // state loaded; until then never intercept (fail open)
   let overlayOpen = false;
+  let overlayHost = null;      // current overlay host element
+  let closeOverlay = () => { overlayOpen = false; };
   const allowed = new WeakSet(); // elements whose next click must pass through
 
   // ---- state (cached so the click handler can stay synchronous) ----
+  // Storage is not reachable from content scripts: the service worker owns it and we get
+  // { settings, pausedUntil, bypass } through messages (on load, on focus / visible, and pushed on change).
   function applyState(d) {
-    if (d.settings) settings = Object.assign({}, settings, d.settings);
-    if ("pausedUntil" in d) pausedUntil = d.pausedUntil || 0;
-    if ("bypass" in d) bypass = d.bypass || {};
+    if (!d || typeof d !== "object") return;
+    if (d.settings && typeof d.settings === "object") settings = Object.assign({}, settings, d.settings, { sites: Object.assign({}, d.settings.sites) });
+    if ("pausedUntil" in d) pausedUntil = Number(d.pausedUntil) || 0;
+    if ("bypass" in d) bypass = d.bypass && typeof d.bypass === "object" ? d.bypass : {};
+  }
+  async function refreshState() {
+    try {
+      const r = await chrome.runtime.sendMessage({ type: "getState" });
+      if (r && r.ok) { applyState(r); ready = true; }
+    } catch (e) { /* extension context gone: stay in the current (fail-open) state */ }
   }
   function init() {
     try {
-      chrome.storage.local.get(["settings", "pausedUntil", "bypass"]).then((d) => { applyState(d); ready = true; });
-      chrome.storage.onChanged.addListener((changes, area) => {
-        if (area !== "local") return;
-        const d = {};
-        for (const k of Object.keys(changes)) d[k] = changes[k].newValue;
-        applyState(d);
+      chrome.runtime.onMessage.addListener((msg, sender) => {
+        if (sender.id !== chrome.runtime.id || sender.tab) return;   // only from our service worker
+        if (msg && msg.type === "state") { applyState(msg); ready = true; }
       });
-      chrome.runtime.sendMessage({ type: "getConfig", hostname: host }).then((r) => {
+      refreshState();
+      document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refreshState(); });
+      window.addEventListener("focus", refreshState);
+      chrome.runtime.sendMessage({ type: "getConfig" }).then((r) => {
         config = r && r.config;
-      });
+      }).catch(() => {});
     } catch (e) { /* extension context gone */ }
   }
 
@@ -86,6 +97,7 @@
   // Flattens a price element into [{ text, fraction }] so <sup> cents can be joined correctly.
   function priceParts(node, out) {
     for (const n of node.childNodes) {
+      if (out.length > 200) break;
       if (n.nodeType === 3) out.push({ text: n.nodeValue });
       else if (n.nodeType === 1) {
         const cls = n.getAttribute("class") || "";
@@ -96,7 +108,7 @@
     return out;
   }
   function parseEl(el, def) {
-    const text = joinPriceParts(priceParts(el, []), def) || el.getAttribute("content") || "";
+    const text = String(joinPriceParts(priceParts(el, []), def) || el.getAttribute("content") || "").slice(0, 200);
     return text.trim() ? parsePrice(text, def) : null;
   }
   // First parseable price among `selectors`, searched inside `scope` (default: whole page).
@@ -131,7 +143,7 @@
     }
     return null;
   }
-  const clean = (t) => String(t || "").replace(/\s+/g, " ").trim();
+  const clean = (t) => String(t || "").replace(/\s+/g, " ").trim().slice(0, 200);
 
   function pageProduct(def) {
     const sel = (config && config.selectors) || {};
@@ -223,22 +235,26 @@
   function onClick(e) {
     const target = e.target;
     if (!(target instanceof Element)) return;
-    const hit = findButton(target);
-    if (!hit) return;
-    const el = hit.el;
-    if (allowed.has(el)) return;                                // our own re-click
-    if (!e.isTrusted) return;                                   // only real user clicks
-    if (!ready || !config) return;                              // state not loaded yet: fail open
-    if (overlayOpen) { block(e); return; }
-    const now = Date.now();
-    if (settings.sites[config.siteId] === false) return;        // site disabled
-    if (pausedUntil > now) return;                              // extension paused
-    if (isBypassed(hit.kind, now)) return;                      // user just chose "continue"
-    const product = getProduct(el);
-    const p = product.price;
-    if (p && p.currency === settings.mainCurrency && p.amount < settings.minPrice) return;
+    if (overlayOpen && overlayHost && !overlayHost.isConnected) closeOverlay(); // host removed behind our back: self-heal
+    let hit, product;
+    try {
+      hit = findButton(target);
+      if (!hit) return;
+      const el = hit.el;
+      if (allowed.has(el)) return;                              // our own re-click
+      if (!e.isTrusted) return;                                 // only real user clicks
+      if (!ready || !config) return;                            // state not loaded yet: fail open
+      if (overlayOpen) { block(e); return; }
+      const now = Date.now();
+      if (settings.sites[config.siteId] === false) return;      // site disabled
+      if (pausedUntil > now) return;                            // extension paused
+      if (isBypassed(hit.kind, now)) return;                    // user just chose "continue"
+      product = getProduct(el);
+      const p = product.price;
+      if (p && p.currency === settings.mainCurrency && p.amount < settings.minPrice) return;
+    } catch (err) { return; }                                   // any DOM-walk failure: fail open
     block(e);
-    showOverlay(el, product);
+    showOverlay(hit.el, product);
   }
   function block(e) { e.preventDefault(); e.stopImmediatePropagation(); }
 
@@ -332,7 +348,8 @@
     overlayOpen = true;
     const host_ = document.createElement("div");
     const root = host_.attachShadow({ mode: "closed" });
-    host_.style.cssText = "all: initial; position: fixed; inset: 0; z-index: 2147483647;";
+    host_.style.cssText = "all: initial !important; display: block !important; position: fixed !important; inset: 0 !important; " +
+      "z-index: 2147483647 !important; pointer-events: auto !important; visibility: visible !important; opacity: 1 !important;";
     root.appendChild(h("style", {}, CSS));
 
     const title = product.title.length > 140 ? product.title.slice(0, 137) + "..." : product.title;
@@ -360,13 +377,19 @@
     backdrop.appendChild(card);
     root.appendChild(backdrop);
 
+    let observer = null;
     function close() {
       overlayOpen = false;
+      if (observer) { observer.disconnect(); observer = null; }
       document.removeEventListener("keydown", onKey, true);
       host_.remove();
+      if (overlayHost === host_) overlayHost = null;
     }
+    overlayHost = host_;
+    closeOverlay = close;
     const buttons = [bRemind, bGo, bNever];
     function onKey(ev) {
+      if (!ev.isTrusted) return;
       if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); close(); } // blocks, no savings
       else if (ev.key === "Tab") {
         const active = root.activeElement;
@@ -389,19 +412,27 @@
       errEl.hidden = false;
     }
     const money = () => ({ price: price ? price.amount : null, currency: price ? price.currency : null });
-    bRemind.addEventListener("click", () => save({ type: "remind", item: {
-      title: product.title, url: location.href, ...money() } }));
-    bNever.addEventListener("click", () => save({ type: "never", title: product.title, ...money() }));
-    bGo.addEventListener("click", async () => {
+    const ptitle = product.title.slice(0, 200);
+    bRemind.addEventListener("click", (ev) => { if (ev.isTrusted) save({ type: "remind", item: {
+      title: ptitle, url: location.href, ...money() } }); });
+    bNever.addEventListener("click", (ev) => { if (ev.isTrusted) save({ type: "never", title: ptitle, url: location.href, ...money() }); });
+    bGo.addEventListener("click", async (ev) => {
+      if (!ev.isTrusted) return;
       bypass[host] = { checkoutUntil: Date.now() + BYPASS_MS };
       close();
-      await request({ type: "continue", hostname: host });
+      await request({ type: "continue" });
       allowed.add(triggerEl);
       triggerEl.click();
       setTimeout(() => allowed.delete(triggerEl), 1000);
     });
 
     document.documentElement.appendChild(host_);
+    // Keep the overlay alive and on top: closed if the page removes it, re-appended if something lands after it.
+    observer = new MutationObserver(() => {
+      if (!host_.isConnected) { close(); return; }
+      if (document.documentElement.lastElementChild !== host_) document.documentElement.appendChild(host_);
+    });
+    observer.observe(document.documentElement, { childList: true });
     bRemind.focus();
   }
 

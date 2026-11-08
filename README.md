@@ -49,7 +49,9 @@ For every link, under **After payment** choose *Don't show confirmation page* an
 https://overcrasher.github.io/wait-24h/thanks.html?session_id={CHECKOUT_SESSION_ID}
 ```
 
-`thanks.js` sets `supporter: true` only when `session_id` starts with `cs_`.
+`thanks.js` does not touch storage: it sends `{ type: "supporter", sessionId }` to the service worker, which sets
+`supporter: true` only if the sender page is exactly `https://overcrasher.github.io/wait-24h/thanks.html` and the id
+matches `^cs_(live|test)_[A-Za-z0-9]{20,}$`. The manifest match is `thanks.html?session_id=*`.
 
 **1% button.** It shows 1% of the main-currency savings total, rounded up to a whole unit,
 minimum 3 (e.g. 120 saved -> 3, 450 -> 5, 1001 -> 11). Clicking opens the `custom` link and the
@@ -66,6 +68,39 @@ do not burn asks), and Options shows "Donation links not configured yet".
 
 Donation asks happen only in the popup banner, at milestones 50 / 100 / 250 / 500 / 1000 of the main
 currency, at most once per milestone, at least 30 days apart, never for supporters or after "Don't ask again".
+
+## Before publishing
+
+Run `python3 tools/check_release.py --release` (plain `python3 tools/check_release.py` skips the emptiness
+check, useful while developing). It exits 1 if:
+
+- a non-empty link in `config.js` is not `https://buy.stripe.com/...`;
+- a link contains `test_` (Stripe test mode), `TODO` or `PLACEHOLDER`;
+- with `--release`, any EUR `small` / `medium` / `large` / `custom` link is empty;
+- `THANKS_URL` in `config.js` does not correspond to the thanks match in `manifest.json`.
+
+The popup and options page also refuse to open any donation link whose origin is not `https://buy.stripe.com`.
+
+## Security model
+
+Wait 24h is a self-control aid, not a security control.
+
+Protected:
+- The service worker validates every message: the sender must be our own extension (popup/options pages) or a content
+  script on a `sites.json` shop over `https`. The shop host is taken from the sender's tab, never from the message.
+  Content scripts may only send `getConfig`, `getState`, `remind`, `never`, `continue` (and `supporter` from the thank-you
+  page); `skipItem` / `keepItem` are accepted from extension pages only. Titles are cleaned and capped, prices must be
+  `0 < p <= 100000`, currencies `^[A-Z]{3}$`, URLs `http(s)` on the shop's own host. Pending reminders are capped at
+  100 and de-duplicated by URL.
+- `chrome.storage.local` is restricted to trusted contexts (`setAccessLevel`), so content scripts never read or write it;
+  they get settings through messages and the worker pushes changes.
+- Stored data is re-validated on every read; link targets are `safeUrl`-checked; donation links must be Stripe.
+- Strict extension-page CSP; no inline scripts, no remote code, no network requests, no `tabs` or host permissions.
+
+Best effort only:
+- Scripts on the shop page can bypass the nudge (for example by calling `form.submit()`, dispatching synthetic clicks,
+  or removing the overlay). The overlay re-attaches itself and ignores untrusted events, but cannot stop a hostile page.
+- The supporter flag is cosmetic and works on the honour system: anyone can visit the thank-you URL.
 
 ## Add a new shop to `sites.json`
 
@@ -90,8 +125,9 @@ used when a price has an ambiguous or missing symbol.
 }
 ```
 
-Then add `"*://*.myshop.ro/*"` (one per domain) to **both** `content_scripts[0].matches` and
-`host_permissions` in `manifest.json`, and reload the extension. Selector arrays are tried in order. If
+Then add `"https://*.myshop.ro/*"` (one per domain) to `content_scripts[0].matches` in `manifest.json`
+(there are no `host_permissions`; the domain in `sites.json` is also what the service worker accepts messages
+from), and reload the extension. Selector arrays are tried in order. If
 selectors miss, the text heuristic (EN + RO button texts) still catches common buttons.
 
 - `buy`: buy now / add to cart buttons. Restrict them to the product-detail container where possible,
@@ -114,14 +150,14 @@ selectors miss, the text heuristic (EN + RO button texts) still catches common b
   data (`itemprop="price"` + `priceCurrency`, then JSON-LD `Product` offers). From a price element,
   `<sup>` / `decimal` / `fraction` / `cents` parts are joined as decimals ("89<sup>99</sup> Lei" = 89.99).
   Prices above 100000 are treated as unknown.
-`*://*.example.com/*` matches the bare domain too.
+`https://*.example.com/*` matches the bare domain too. Only `https` pages are injected.
 
 ## Chrome Web Store permission justification
 
 - `storage`: keeps settings, reminders and savings on the device.
 - `alarms`: fires the reminder when the delay elapses.
 - `notifications`: shows the "Still want it?" reminder.
-- Host permissions: only the listed shops (to run the content script). The thank-you page needs no host permission (it is a content script match).
+- No host permissions: the shop pages and the thank-you page are content script matches only (`https` only).
 - No `tabs` permission: opening links uses `chrome.tabs.create` which needs none.
 
 ## Storage schema (`chrome.storage.local`)
@@ -135,10 +171,10 @@ All keys are optional; defaults apply on a fresh install.
 | `pending` | `[{ id, title, url, price: number\|null, currency: string\|null, timestamp, dueAt, notified }]` |
 | `savings` | `{ [ISO currency]: number }` |
 | `itemsSkipped` | number |
-| `history` | `[{ title, price, currency, date }]`, last 200 |
+| `history` | `[{ title, price, currency, date, url? }]`, last 200 (`url` = the skipped item's page, shown as a link in Recent wins; older entries have none) |
 | `bypass` | `{ [hostname]: { checkoutUntil: epoch ms } }` – after "I need this, continue": checkout-type clicks on the host are not paused until then (15 min). Buy / add-to-cart clicks are always paused. A legacy `urls` field is ignored |
 | `donation` | `{ asked: number[], lastAskAt: epoch ms, dontAskAgain: boolean }` |
-| `supporter` | boolean, set by `thanks.js` |
+| `supporter` | boolean, set by the service worker after `thanks.js` reports a valid session id |
 
 Alarms are named `reminder:<id>`; the notification id equals the item id.
 
