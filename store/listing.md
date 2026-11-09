@@ -20,6 +20,8 @@ Characters: 107
 
 ## 3. Detailed description (EN)
 
+Do not name shop brands in the public description or short description — the Chrome Web Store flagged that as keyword spam (violation 'Yellow Argon', Nov 2026). Shop names are fine in the reviewer notes and permission justifications.
+
 ```
 Wait 24h adds a small pause between "I want it" and "I bought it".
 
@@ -34,8 +36,8 @@ HOW IT WORKS
 • When a reminder is due, you get a "Still want it?" notification. Then buy it or skip it from the popup.
 • Options: turn shops on or off, pause only above a minimum price, pick a 12 h, 24 h or 2-day delay, or pause the extension for an hour.
 
-WORKS ON
-Amazon (18 country sites), eMAG, AliExpress, Temu, Shein and eBay (13 country sites). Wait 24h is an independent project and is not affiliated with, endorsed by or sponsored by any of these shops.
+WHERE IT WORKS
+A selection of popular online shops. See the full list, and turn each shop on or off, in Options. Wait 24h is an independent project and is not affiliated with any shop.
 
 PRIVACY
 • Everything stays on your device, in your browser's local extension storage.
@@ -47,7 +49,7 @@ Wait 24h is free and built by one developer. If it helps, you can support it wit
 
 Open source: https://github.com/Overcrasher/wait-24h
 ```
-Characters: 1835 (target 1,200–1,800)
+Characters: 1814 (target 1,200–1,800)
 
 ---
 
@@ -80,8 +82,8 @@ CUM FUNCȚIONEAZĂ
 • Când vine momentul, primești o notificare „Mai vrei produsul?”. Apoi îl cumperi sau renunți din fereastra extensiei.
 • Opțiuni: activezi sau dezactivezi magazinele, pui pauză doar peste un preț minim, alegi o întârziere de 12 ore, 24 de ore sau 2 zile ori oprești extensia o oră.
 
-FUNCȚIONEAZĂ PE
-Amazon (18 site-uri naționale), eMAG, AliExpress, Temu, Shein și eBay (13 site-uri naționale). Wait 24h este un proiect independent și nu este afiliat, aprobat sau sponsorizat de aceste magazine.
+UNDE FUNCȚIONEAZĂ
+Pe o selecție de magazine online populare. Lista completă o găsești în Opțiuni, unde poți activa sau dezactiva fiecare magazin. Wait 24h este un proiect independent și nu este afiliat cu niciun magazin.
 
 CONFIDENȚIALITATE
 • Totul rămâne pe dispozitivul tău, în spațiul local de stocare al extensiei.
@@ -95,7 +97,7 @@ Interfața extensiei este în limba engleză.
 
 Cod sursă deschis: https://github.com/Overcrasher/wait-24h
 ```
-Characters: 2092
+Characters: 2101
 
 ---
 
