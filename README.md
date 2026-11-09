@@ -1,5 +1,7 @@
 # Wait 24h
 
+**Install:** [Chrome Web Store](https://chromewebstore.google.com/detail/wait-24h/pkgdjohoemjkejcbfbkfobbbjcpdabme)
+
 A Manifest V3 Chrome extension that adds a pause before impulse purchases. When you click
 "Buy now" / "Add to cart" / "Place order" on a supported shop, an overlay asks whether you
 really need it. You can be reminded tomorrow, continue, or skip it. Money counts as saved
@@ -7,11 +9,14 @@ really need it. You can be reminded tomorrow, continue, or skip it. Money counts
 
 Supported: Amazon (many country domains), eMAG, AliExpress, Temu, Shein, eBay (many domains).
 
-## Load it unpacked
+## Install
 
-1. Open `chrome://extensions`, enable **Developer mode**.
-2. Click **Load unpacked** and pick this `wait-24h` folder.
-3. Pin the extension; visit a supported shop and click a buy button.
+1. **Recommended:** install from the [Chrome Web Store](https://chromewebstore.google.com/detail/wait-24h/pkgdjohoemjkejcbfbkfobbbjcpdabme).
+2. For development, load it unpacked:
+
+   1. Open `chrome://extensions`, enable **Developer mode**.
+   2. Click **Load unpacked** and pick this `wait-24h` folder.
+   3. Pin the extension; visit a supported shop and click a buy button.
 
 Regenerate icons with `python3 tools/make_icons.py`. Run unit tests from this folder with
 `/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc tests/run.js`.

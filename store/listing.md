@@ -211,3 +211,5 @@ Permissions: storage, alarms, notifications. No host_permissions, no tabs permis
 - [ ] Paste name, short description, detailed description (EN and RO), category, single purpose, permission justifications, data disclosures and reviewer notes.
 - [ ] Tick the three certification statements and set remote code to No.
 - [ ] Set visibility (Public) and distribution regions, then submit for review.
+
+Published store URL: https://chromewebstore.google.com/detail/wait-24h/pkgdjohoemjkejcbfbkfobbbjcpdabme
