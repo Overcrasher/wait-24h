@@ -66,6 +66,10 @@ eq("custom 120", D.customAmount(120), 3);
 eq("custom 450", D.customAmount(450), 5);
 eq("custom 1000", D.customAmount(1000), 10);
 eq("custom 1001", D.customAmount(1001), 11);
+eq("custom 10000 -> 100", D.customAmount(10000), 100);
+eq("custom 10001 capped at 100", D.customAmount(10001), 100);
+eq("custom 25000 capped at 100", D.customAmount(25000), 100);
+eq("label capped", D.customLabel("EUR", "EUR", 25000, "€").text, "1% of what you saved: €100");
 eq("label eur", D.customLabel("EUR", "EUR", 450, "€").text, "1% of what you saved: €5");
 eq("label other currency", D.customLabel("RON", "EUR", 450, "€"), { amount: null, text: "Pick your own amount" });
 

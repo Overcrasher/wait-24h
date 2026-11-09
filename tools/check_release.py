@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Pre-publish checks for config.js. Usage: python3 tools/check_release.py [--release]
 
-Fails (exit 1) if a donation link is not an https://buy.stripe.com/ link, looks like a test-mode /
+Fails (exit 1) if a donation link is not an https://buy.stripe.com/ or https://donate.stripe.com/ link, looks like a test-mode /
 placeholder link, or THANKS_URL does not correspond to the manifest's thanks content-script match.
 With --release the four EUR links (small, medium, large, custom) must also be set.
 """
 import json, os, re, sys
 
+# Mirrors ALLOWED_DONATION_ORIGINS in lib/support.js.
+ALLOWED_ORIGINS = ("https://buy.stripe.com", "https://donate.stripe.com")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 release = "--release" in sys.argv
 errors = []
@@ -27,8 +29,8 @@ for name, links in sets.items():
         if not url:
             continue
         where = "%s.%s" % (name, key)
-        if not url.startswith("https://buy.stripe.com/"):
-            errors.append("%s: must start with https://buy.stripe.com/ (got %r)" % (where, url))
+        if not url.startswith(tuple(o + "/" for o in ALLOWED_ORIGINS)):
+            errors.append("%s: must start with one of %s (got %r)" % (where, ", ".join(o + "/" for o in ALLOWED_ORIGINS), url))
         if "test_" in url:
             errors.append("%s: looks like a Stripe test-mode link (contains 'test_')" % where)
         if re.search(r"TODO|PLACEHOLDER", url, re.I):

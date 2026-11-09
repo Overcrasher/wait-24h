@@ -33,14 +33,17 @@ Then fill the Stripe links in `config.js`.
 
 ## Stripe Payment Links and supporter detection
 
-Per currency, create **4** Payment Links in Stripe:
+Per currency, create **4** Payment Links in Stripe. Stripe may issue them on `buy.stripe.com` or
+`donate.stripe.com`; both are accepted. The `custom` link is a 1 (EUR or USD) one-time product with
+**Let customers adjust quantity** enabled (min 3, max 100): the user sets quantity N on Stripe's page to pay N.
+The extension suggests 1% of the total saved (min 3, max 100) and tells the user which quantity to set.
 
 | Key      | Type                                | Used for                      |
 |----------|-------------------------------------|-------------------------------|
 | `small`  | fixed price, 3                      | the 3 button                  |
 | `medium` | fixed price, 5 (emphasized)         | the 5 button                  |
 | `large`  | fixed price, 10                     | the 10 button                 |
-| `custom` | "Customer chooses what to pay"      | "1% of what you saved" button |
+| `custom` | 1 one-time product, "Let customers adjust quantity" on, min 3, max 100 | "1% of what you saved" button |
 
 Do this in EUR for `DONATE_LINKS`, and optionally again in USD for `DONATE_LINKS_USD`.
 For every link, under **After payment** choose *Don't show confirmation page* and set the redirect to:
@@ -74,12 +77,12 @@ currency, at most once per milestone, at least 30 days apart, never for supporte
 Run `python3 tools/check_release.py --release` (plain `python3 tools/check_release.py` skips the emptiness
 check, useful while developing). It exits 1 if:
 
-- a non-empty link in `config.js` is not `https://buy.stripe.com/...`;
-- a link contains `test_` (Stripe test mode), `TODO` or `PLACEHOLDER`;
+- a non-empty link in `config.js` is not `https://buy.stripe.com/...` or `https://donate.stripe.com/...`;
+- a link contains `test_` (Stripe test-mode links are rejected), `TODO` or `PLACEHOLDER`;
 - with `--release`, any EUR `small` / `medium` / `large` / `custom` link is empty;
 - `THANKS_URL` in `config.js` does not correspond to the thanks match in `manifest.json`.
 
-The popup and options page also refuse to open any donation link whose origin is not `https://buy.stripe.com`.
+The popup and options page also refuse to open any donation link whose origin is not `https://buy.stripe.com` or `https://donate.stripe.com`.
 
 ## Security model
 
