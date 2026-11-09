@@ -21,6 +21,7 @@ Regenerate icons with `python3 tools/make_icons.py`. Run unit tests from this fo
 The pages live in `docs/` and are served by GitHub Pages. In the repo `Overcrasher/wait-24h` go to
 **Settings -> Pages**, choose **Deploy from a branch -> `main` -> `/docs`**. That gives:
 
+- `https://overcrasher.github.io/wait-24h/` (homepage, `docs/index.html`)
 - `https://overcrasher.github.io/wait-24h/thanks.html`
 - `https://overcrasher.github.io/wait-24h/privacy.html`
 

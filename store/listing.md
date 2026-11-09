@@ -164,8 +164,8 @@ Certifications (tick all three):
 ## 9. URLs
 
 - Privacy policy URL: https://overcrasher.github.io/wait-24h/privacy.html
-- Homepage URL: https://github.com/Overcrasher/wait-24h
-- Support URL: https://github.com/Overcrasher/wait-24h/issues
+- Homepage URL: https://overcrasher.github.io/wait-24h/
+- Support URL: https://github.com/Overcrasher/wait-24h/issues (if GitHub is slow, the homepage https://overcrasher.github.io/wait-24h/ can also be used as the support URL)
 
 ## 10. Screenshots, promo tiles and icon (upload order)
 

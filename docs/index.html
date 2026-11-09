@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wait 24h – A deep breath before you buy</title>
+<meta name="description" content="Wait 24h is a free Chrome extension that adds a pause before impulse purchases. Be reminded tomorrow, continue, or skip it. Private by design: no ads, no tracking, no accounts.">
+<link rel="canonical" href="https://overcrasher.github.io/wait-24h/">
+<style>
+:root{color-scheme:light dark;--bg:#f7f3ec;--surface:#fffdf9;--line:#e6dfd2;--fg:#23282a;--muted:#5f6663;--accent:#0f766e;--accent-soft:#dcefea;--amber:#b7791f;--amber-soft:#fbefd5;--shadow:0 1px 2px rgba(60,45,20,.06),0 8px 30px rgba(60,45,20,.08)}
+@media(prefers-color-scheme:dark){:root{--bg:#141a19;--surface:#1c2423;--line:#2e3b39;--fg:#edf1ee;--muted:#a3b0ac;--accent:#5fd1b8;--accent-soft:#1f3a36;--amber:#f4b740;--amber-soft:#3a3120;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 30px rgba(0,0,0,.3)}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 ui-rounded,"SF Pro Rounded",-apple-system,"Segoe UI Variable","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mark{filter:drop-shadow(0 3px 6px rgba(11,94,87,.3))}
+main{max-width:720px;margin:0 auto;padding:40px 16px 24px}
+.hero{background:radial-gradient(120% 100% at 50% 0%,var(--accent-soft),var(--surface) 65%);border:1px solid var(--line);border-radius:24px;padding:40px 24px;text-align:center;box-shadow:var(--shadow)}
+h1{margin:12px 0 4px;font-size:40px;line-height:1.15;letter-spacing:-.02em}
+.tag{margin:0 0 16px;font-size:20px;color:var(--accent);font-weight:600}
+.hero p{max-width:540px;margin:8px auto;color:var(--muted)}
+.cta{margin-top:20px}
+h2{margin:40px 0 12px;font-size:24px;letter-spacing:-.01em}
+p,li{color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.steps li{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 18px;box-shadow:var(--shadow)}
+.steps strong{display:block;color:var(--fg)}
+.steps li:nth-child(1){border-left:4px solid var(--accent)}.steps li:nth-child(2){border-left:4px solid var(--amber)}.steps li:nth-child(3){border-left:4px solid var(--accent)}
+.shops{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.shops li{background:var(--amber-soft);color:var(--fg);border-radius:999px;padding:4px 14px;font-weight:600;font-size:15px}
+.small{font-size:14px}
+.shot{display:block;margin:28px auto 0;max-width:100%;height:auto;border-radius:16px;border:1px solid var(--line);box-shadow:var(--shadow)}
+footer{max-width:720px;margin:0 auto;padding:16px 16px 48px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);text-align:center}
+footer a{margin:0 8px;display:inline-block}
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <svg class="mark" viewBox="0 0 32 32" width="72" height="72" aria-hidden="true"><defs><linearGradient id="mk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b9588"/><stop offset="1" stop-color="#0b5e57"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#mk)"/><path d="M9 6.5h14a1 1 0 0 1 0 2h-1c0 4.2-2.6 6.2-4.6 7.5 2 1.3 4.6 3.3 4.6 7.5h1a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h1c0-4.2 2.6-6.2 4.6-7.5C12.6 14.7 10 12.7 10 8.5H9a1 1 0 0 1 0-2z" fill="#fff8ec"/><path d="M12 23.5c.5-1.8 2-2.8 4-4 2 1.2 3.5 2.2 4 4z" fill="#f4b740"/><path d="M13.2 9c.4 1.5 1.3 2.3 2.8 3.2 1.500-.9 2.4-1.7 2.8-3.200z" fill="#f4b740"/></svg>
+    <h1>Wait 24h</h1>
+    <p class="tag">A deep breath before you buy</p>
+    <p>Wait 24h is a free Chrome extension that adds a pause before impulse purchases. When you click "Buy now" or "Add to cart" on a supported shop, a small overlay asks whether you really need it. Sleep on it, then decide with a clear head.</p>
+    <!-- TODO: add the "Add to Chrome" link here once the Chrome Web Store listing is live.
+         Example: <p class="cta"><a href="STORE_URL_HERE">Add to Chrome</a></p> -->
+  </header>
+
+  <section>
+    <h2>How it works</h2>
+    <p>On a buy button, Wait 24h shows three choices:</p>
+    <ol class="steps">
+      <li><strong>Remind me tomorrow</strong>Saves the item and nudges you later. Nothing is counted as saved.</li>
+      <li><strong>I need this, continue</strong>Carry on with your purchase, no fuss.</li>
+      <li><strong>Never mind, I'll skip it</strong>You decided to skip it, so the amount is added to your savings.</li>
+    </ol>
+    <p>Savings are counted only when you confirm a skip, never guessed, and are tracked per currency. Reminders arrive after 12, 24 or 48 hours, your choice.</p>
+    <img class="shot" src="img/popup.png" width="1280" height="800" alt="The Wait 24h popup showing how much money you did not spend" loading="lazy">
+  </section>
+
+  <section>
+    <h2>Works on</h2>
+    <ul class="shops"><li>Amazon</li><li>eMAG</li><li>AliExpress</li><li>Temu</li><li>Shein</li><li>eBay</li></ul>
+    <p class="small">Wait 24h is not affiliated with, endorsed by or sponsored by any of these shops. Names belong to their owners.</p>
+  </section>
+
+  <section>
+    <h2>Private by design</h2>
+    <p>Everything stays on your device. There are no ads, no tracking and no accounts, and the extension makes no network requests. It is open source, so you can check for yourself.</p>
+  </section>
+
+  <section>
+    <h2>Support</h2>
+    <p>Wait 24h is free. If it helps you, you can optionally make a one-time contribution through Stripe. The option appears only at savings milestones, and you can turn it off at any time.</p>
+  </section>
+</main>
+<footer>
+  <a href="privacy.html">Privacy policy</a>
+  <a href="https://github.com/Overcrasher/wait-24h">Source code</a>
+  <a href="https://github.com/Overcrasher/wait-24h/issues">Issues</a>
+</footer>
+</body>
+</html>
