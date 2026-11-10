@@ -197,3 +197,7 @@ unknown price, are always paused.
 - sites.json is loaded by the service worker only and is not web accessible.
 - Selectors for shops change often; expect to maintain `sites.json`.
 - See `PRIVACY.md`: no data leaves the device.
+
+## More from the same developer
+
+- [Meeting Meter — see what your meetings cost](https://chromewebstore.google.com/detail/meeting-meter/ffkniocclnaojfdcoofnjkfnihnpgnlb)
