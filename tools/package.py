@@ -13,6 +13,7 @@ TOP_FILES = [
     "manifest.json", "background.js", "content.js", "thanks.js", "config.js",
     "sites.json", "popup.html", "popup.css", "popup.js",
     "options.html", "options.css", "options.js",
+    "welcome.html", "welcome.css", "welcome.js",
 ]
 
 

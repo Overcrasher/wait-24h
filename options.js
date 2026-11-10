@@ -1,6 +1,8 @@
 import { getAll, DEFAULT_SETTINGS, CURRENCIES } from "./lib/store.js";
 import { renderDonateButtons } from "./lib/support.js";
 
+const G = globalThis.WaitGrowth;
+
 const $ = (id) => document.getElementById(id);
 let settings;
 let savedTimer;
@@ -68,6 +70,14 @@ async function init() {
 
   $("thanks").hidden = !state.supporter;
   const shown = renderDonateButtons($("donate"), settings.mainCurrency, state.savings[settings.mainCurrency] || 0, $("donate-note"));
+  // Cross-promotion links: only exact allow-listed URLs are ever opened.
+  for (const id of ["rate-link", "other-link"]) {
+    const a = $(id);
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (G.ALLOWED_URLS.includes(a.href)) chrome.tabs.create({ url: a.href });
+    });
+  }
   if (!shown) $("donate-note").textContent = "Donation links not configured yet";
 }
 init();

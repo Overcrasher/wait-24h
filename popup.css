@@ -128,3 +128,14 @@ a { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* share button (hero) */
+.share { margin-top: 8px; font-size: 12px; padding: 3px 12px; border-radius: 99px; background: var(--surface); color: var(--accent); }
+
+/* rating card: same language as the donation banner, quieter (neutral surface) */
+.rating { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; margin: 10px 0 0; }
+.rating p { margin: 0 0 8px; font-size: 13px; }
+.rating-row { display: flex; gap: 6px; }
+.rating-row button { flex: 1; }
+.rating .rate { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.rating .rate:hover { background: var(--accent-strong); border-color: var(--accent-strong); }

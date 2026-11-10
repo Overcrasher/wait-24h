@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome to Wait 24h</title>
+  <link rel="stylesheet" href="options.css">
+  <link rel="stylesheet" href="welcome.css">
+</head>
+<body>
+  <main>
+    <header class="page-head">
+      <svg class="mark" viewBox="0 0 32 32" width="56" height="56" aria-hidden="true">
+        <defs><linearGradient id="mk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b9588"/><stop offset="1" stop-color="#0b5e57"/></linearGradient></defs>
+        <rect width="32" height="32" rx="8" fill="url(#mk)"/>
+        <path d="M9 6.5h14a1 1 0 0 1 0 2h-1c0 4.2-2.6 6.2-4.6 7.5 2 1.3 4.6 3.3 4.6 7.5h1a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h1c0-4.2 2.6-6.2 4.6-7.5C12.6 14.7 10 12.700 10 8.5H9a1 1 0 0 1 0-2z" fill="#fff8ec"/>
+        <path d="M12 23.500c.5-1.800 2-2.800 4-4 2 1.200 3.500 2.200 4 4z" fill="#f4b740"/>
+        <path d="M13.200 9c.4 1.500 1.300 2.300 2.800 3.200 1.500-.9 2.400-1.700 2.800-3.200z" fill="#f4b740"/>
+      </svg>
+      <div>
+        <h1>Welcome to Wait 24h</h1>
+        <p class="tagline">A pause before impulse buys, and a tally of the money you kept.</p>
+      </div>
+    </header>
+
+    <section>
+      <div class="sec-head">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.500 2M9 2.500h6"/></svg>
+        <div><h2>Try it now</h2></div>
+      </div>
+      <ol class="steps">
+        <li><span class="n" aria-hidden="true">1</span><span>Open a product page on a supported shop, such as Amazon, eMAG or AliExpress.</span></li>
+        <li><span class="n" aria-hidden="true">2</span><span>Click the buy button. Wait 24h steps in and offers to remind you tomorrow.</span></li>
+        <li><span class="n" aria-hidden="true">3</span><span>Tomorrow, decide: still want it, or skip it. Skipped items add up to your savings.</span></li>
+      </ol>
+    </section>
+
+    <section>
+      <div class="sec-head">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.500-3 8-7 10-4-2-7-5.500-7-10V6l7-3z"/></svg>
+        <div><h2>Good to know</h2></div>
+      </div>
+      <p class="hint know">Everything stays on your device. No account, no tracking, no ads.</p>
+      <div class="actions">
+        <button id="open-settings" class="cta" type="button">Open settings</button>
+      </div>
+      <p class="hint pin">Pin it: click the puzzle icon in the toolbar, then the pin next to Wait 24h.</p>
+    </section>
+  </main>
+  <script src="welcome.js"></script>
+</body>
+</html>

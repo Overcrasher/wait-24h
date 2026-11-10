@@ -120,7 +120,11 @@ async function reconcile() {
   }
 }
 
-chrome.runtime.onInstalled.addListener(() => { lockStorage(); reconcile(); });
+chrome.runtime.onInstalled.addListener((details) => {
+  lockStorage(); reconcile();
+  // Welcome page: first install only, never on update or reload.
+  if (details && details.reason === "install") chrome.tabs.create({ url: chrome.runtime.getURL("welcome.html") });
+});
 chrome.runtime.onStartup.addListener(() => { lockStorage(); reconcile(); });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {

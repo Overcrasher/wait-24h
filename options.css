@@ -92,3 +92,7 @@ button.donate.custom { font-weight: 500; }
 
 @media (max-width: 520px) { .sites { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+/* cross-promotion lines */
+.support .hint.more { font-size: 12.5px; margin-top: 8px; }
+.support .hint.more a { color: var(--accent-strong); }

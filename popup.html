@@ -33,10 +33,19 @@
     <a id="banner-never" href="#" class="small-link">Don't ask again</a>
   </section>
 
+  <section id="rating" class="rating" hidden>
+    <p id="rating-text">Enjoying Wait 24h? A quick rating helps other people find it.</p>
+    <div class="rating-row">
+      <button id="rating-rate" class="rate" type="button">Rate it ★</button>
+      <button id="rating-no" type="button">No thanks</button>
+    </div>
+  </section>
+
   <section class="hero">
     <div class="label">You've kept</div>
     <div id="total" class="big">–</div>
     <div id="others" class="others"></div>
+    <button id="share" class="share" type="button" hidden>Share</button>
   </section>
 
   <section class="stats">
@@ -78,6 +87,7 @@
   </section>
 
   <script src="lib/donation.js"></script>
+  <script src="lib/growth.js"></script>
   <script type="module" src="popup.js"></script>
 </body>
 </html>

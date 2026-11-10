@@ -201,3 +201,10 @@ unknown price, are always paused.
 ## More from the same developer
 
 - [Meeting Meter — see what your meetings cost](https://chromewebstore.google.com/detail/meeting-meter/ffkniocclnaojfdcoofnjkfnihnpgnlb)
+
+## Changes in 1.0.1
+
+- Welcome page opens once, on first install only.
+- One-time rating prompt in the popup after the 3rd skipped item.
+- "Share" button next to your total copies a short brag line to the clipboard.
+- Options: rate link and a pointer to Meeting Meter.

@@ -1,6 +1,8 @@
 import { getAll, formatMoney, PAUSE_MS } from "./lib/store.js";
 import { renderDonateButtons, hasDonateLinks } from "./lib/support.js";
 
+const G = globalThis.WaitGrowth;
+
 const $ = (id) => document.getElementById(id);
 const D = globalThis.WaitDonation;
 let state;
@@ -143,15 +145,15 @@ function renderPause() {
 }
 
 async function maybeShowBanner() {
-  if (state.supporter) return;
+  if (state.supporter) return false;
   const main = state.settings.mainCurrency;
   const total = state.savings[main] || 0;
   const now = Date.now();
   const dstate = Object.assign({}, state.donation, { supporter: state.supporter });
   const milestone = D.pickAsk(dstate, total, now);
-  if (!milestone) return;
+  if (!milestone) return false;
   // Unconfigured build: don't show the banner and don't burn the milestone.
-  if (!hasDonateLinks()) return;
+  if (!hasDonateLinks()) return false;
   // Persist right away: showing the banner is the ask (max one per milestone).
   const next = D.applyAsk(state.donation, milestone, now);
   state.donation = next;
@@ -160,17 +162,49 @@ async function maybeShowBanner() {
     " with Wait 24h. Built by one developer, no ads, no tracking. If this helped, a coffee keeps it going.";
   renderDonateButtons($("banner-buttons"), main, total, $("banner-note"));
   $("banner").hidden = false;
+  return true;
 }
 
 async function refresh() {
   state = await getAll();
   renderSavings(); renderPending(); renderRecent(); renderPause();
   $("supporter").hidden = !state.supporter;
+  renderShare();
+}
+
+// "Share" button in the hero: only when the main-currency total is > 0.
+let shareTimer;
+function renderShare() {
+  const total = state.savings[state.settings.mainCurrency] || 0;
+  $("share").hidden = !(total > 0);
+}
+
+async function onShare() {
+  const btn = $("share");
+  const main = state.settings.mainCurrency;
+  const total = state.savings[main] || 0;
+  let label = "Copied!";
+  try { await navigator.clipboard.writeText(G.shareText(total, main, formatMoney)); } catch (e) { label = "Copy failed"; }
+  btn.textContent = label;
+  clearTimeout(shareTimer);
+  shareTimer = setTimeout(() => { btn.textContent = "Share"; }, 1500);
+}
+
+// Rating card: once ever, after the 3rd skipped item, never in the same render as the donation banner.
+async function maybeShowRating(bannerShown) {
+  if (bannerShown || !G.shouldAskRating(state.rating, state.itemsSkipped, G.RATING_THRESHOLD)) return;
+  state.rating = { shown: true, at: Date.now() };
+  await chrome.storage.local.set({ rating: state.rating });
+  $("rating").hidden = false;
 }
 
 async function init() {
   await refresh();
-  await maybeShowBanner();
+  const bannerShown = await maybeShowBanner();
+  await maybeShowRating(bannerShown);
+  $("share").addEventListener("click", onShare);
+  $("rating-rate").addEventListener("click", () => { chrome.tabs.create({ url: G.REVIEWS_URL }); $("rating").hidden = true; });
+  $("rating-no").addEventListener("click", () => { $("rating").hidden = true; });
   $("banner-close").addEventListener("click", () => { $("banner").hidden = true; });
   $("banner-never").addEventListener("click", async (e) => {
     e.preventDefault();

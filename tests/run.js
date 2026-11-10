@@ -2,6 +2,7 @@
 load("lib/price.js");
 load("lib/donation.js");
 load("lib/validate.js");
+load("lib/growth.js");
 
 let pass = 0, fail = 0;
 const failures = [];
@@ -190,6 +191,28 @@ eq("history keeps good + url", V.sanitizeHistory([{ title: "T", price: 5, curren
 eq("history drops bad url field", V.sanitizeHistory([{ title: "T", price: null, currency: null, date: 1, url: "javascript:1" }]), [{ title: "T", price: null, currency: null, date: 1 }]);
 eq("history drops malformed", V.sanitizeHistory([{ title: 1, date: 1 }, { title: "T", date: "x" }, { title: "T", price: 1, currency: "bad", date: 1 }, 5]), []);
 eq("bypass sanitized", V.sanitizeBypass({ "a.com": { checkoutUntil: 5, urls: {} }, "b.com": { checkoutUntil: "x" }, "c.com": 1 }), { "a.com": { checkoutUntil: 5 } });
+
+// ---- growth (rating prompt, share text, store URL)
+const G = WaitGrowth;
+eq("store url exact", G.STORE_URL, "https://chromewebstore.google.com/detail/wait-24h/pkgdjohoemjkejcbfbkfobbbjcpdabme");
+eq("reviews url", G.REVIEWS_URL, "https://chromewebstore.google.com/detail/wait-24h/pkgdjohoemjkejcbfbkfobbbjcpdabme/reviews");
+eq("other url", G.OTHER_STORE_URL, "https://chromewebstore.google.com/detail/meeting-meter/ffkniocclnaojfdcoofnjkfnihnpgnlb");
+eq("rating below", G.shouldAskRating(undefined, 2, 3), false);
+eq("rating at", G.shouldAskRating(undefined, 3, 3), true);
+eq("rating above", G.shouldAskRating({ shown: false, at: 0 }, 9, 3), true);
+eq("rating already shown", G.shouldAskRating({ shown: true, at: 5 }, 9, 3), false);
+eq("rating malformed string", G.shouldAskRating("yes", 3, 3), true);
+eq("rating malformed shown string", G.shouldAskRating({ shown: "true" }, 3, 3), true);
+eq("rating bad count", G.shouldAskRating(undefined, NaN, 3), false);
+eq("rating sanitize junk", G.sanitizeRating(5), { shown: false, at: 0 });
+eq("rating sanitize ok", G.sanitizeRating({ shown: true, at: 7, x: 1 }), { shown: true, at: 7 });
+eq("rating sanitize bad at", G.sanitizeRating({ shown: true, at: "x" }), { shown: true, at: 0 });
+const fmtUS = (a, c, whole) => new Intl.NumberFormat("en-US", Object.assign({ style: "currency", currency: c }, whole ? { maximumFractionDigits: 0 } : {})).format(a);
+eq("share eur whole", G.shareText(187, "EUR", fmtUS), "I kept \u20AC187 by waiting a day before buying. #Wait24h " + G.STORE_URL);
+eq("share eur decimals", G.shareText(42.5, "EUR", fmtUS), "I kept \u20AC42.50 by waiting a day before buying. #Wait24h " + G.STORE_URL);
+eq("share usd", G.shareText(250.4, "USD", fmtUS), "I kept $250 by waiting a day before buying. #Wait24h " + G.STORE_URL);
+eq("share ron", G.shareText(99.99, "RON", fmtUS), "I kept RON\u00A099.99 by waiting a day before buying. #Wait24h " + G.STORE_URL);
+eq("share exact eur text", G.shareText(187, "EUR", fmtUS), "I kept \u20AC187 by waiting a day before buying. #Wait24h https://chromewebstore.google.com/detail/wait-24h/pkgdjohoemjkejcbfbkfobbbjcpdabme");
 
 print("passed " + pass + ", failed " + fail);
 failures.forEach((f) => print("FAIL " + f));
