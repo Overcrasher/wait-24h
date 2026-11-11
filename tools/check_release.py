@@ -59,6 +59,26 @@ else:
     if not thanks.startswith("https://"):
         errors.append("THANKS_URL must be https")
 
+# Localized store name/description (limits enforced by the Chrome Web Store).
+LOCALES = ("en", "ro", "de", "fr", "es")
+for loc in LOCALES:
+    mp = os.path.join(ROOT, "_locales", loc, "messages.json")
+    try:
+        msgs = json.load(open(mp, encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        errors.append("_locales/%s/messages.json: %s" % (loc, e))
+        continue
+    for key, limit in (("extName", 75), ("extDescription", 132)):
+        text = msgs.get(key, {}).get("message")
+        if not text:
+            errors.append("_locales/%s: %s missing" % (loc, key))
+        elif len(text) > limit:
+            errors.append("_locales/%s: %s is %d chars (max %d)" % (loc, key, len(text), limit))
+if manifest.get("default_locale") != "en":
+    errors.append("manifest.json: default_locale must be 'en'")
+if manifest.get("name") != "__MSG_extName__" or manifest.get("description") != "__MSG_extDescription__":
+    errors.append("manifest.json: name/description must be __MSG_extName__/__MSG_extDescription__")
+
 if errors:
     print("check_release: FAILED")
     for e in errors:

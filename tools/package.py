@@ -30,6 +30,11 @@ def collect():
             for name in os.listdir(d):
                 if name.endswith(ext) and os.path.isfile(os.path.join(d, name)):
                     files.append(sub + "/" + name)
+    loc = os.path.join(ROOT, "_locales")
+    if os.path.isdir(loc):
+        for dp, _, names in os.walk(loc):
+            for name in names:
+                files.append(os.path.relpath(os.path.join(dp, name), ROOT).replace(os.sep, "/"))
     return sorted(set(files), key=lambda p: (p != "manifest.json", p))
 
 
@@ -94,6 +99,25 @@ def main():
             target = posixpath.normpath(posixpath.join(posixpath.dirname(js), u))
             if target not in inzip:
                 missing.append("%s imports %s" % (js, u))
+
+    dl = manifest.get("default_locale")
+    used = set(re.findall(r"__MSG_(\w+)__", json.dumps(manifest)))
+    if used or dl:
+        if not dl:
+            missing.append("manifest uses __MSG_ but has no default_locale")
+        elif "_locales/%s/messages.json" % dl not in inzip:
+            missing.append("_locales/%s/messages.json (default_locale)" % dl)
+        locs = sorted({f.split("/")[1] for f in files if f.startswith("_locales/")})
+        for loc_name in locs:
+            p = "_locales/%s/messages.json" % loc_name
+            if p not in inzip:
+                missing.append(p)
+                continue
+            with open(os.path.join(ROOT, p), encoding="utf-8") as fh:
+                msgs = json.load(fh)
+            for k in sorted(used):
+                if k not in msgs:
+                    missing.append("%s: message %s not defined" % (p, k))
 
     if missing:
         fail("referenced files missing from package:\n  " + "\n  ".join(missing))

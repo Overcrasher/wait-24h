@@ -196,6 +196,8 @@ eq("bypass sanitized", V.sanitizeBypass({ "a.com": { checkoutUntil: 5, urls: {} 
 const G = WaitGrowth;
 eq("store url exact", G.STORE_URL, "https://chromewebstore.google.com/detail/wait-24h/pkgdjohoemjkejcbfbkfobbbjcpdabme");
 eq("reviews url", G.REVIEWS_URL, "https://chromewebstore.google.com/detail/wait-24h/pkgdjohoemjkejcbfbkfobbbjcpdabme/reviews");
+eq("share url", G.SHARE_URL, G.STORE_URL + "?utm_source=share");
+eq("store url stays clean", G.STORE_URL.indexOf("?"), -1);
 eq("other url", G.OTHER_STORE_URL, "https://chromewebstore.google.com/detail/meeting-meter/ffkniocclnaojfdcoofnjkfnihnpgnlb");
 eq("rating below", G.shouldAskRating(undefined, 2, 3), false);
 eq("rating at", G.shouldAskRating(undefined, 3, 3), true);
@@ -208,11 +210,11 @@ eq("rating sanitize junk", G.sanitizeRating(5), { shown: false, at: 0 });
 eq("rating sanitize ok", G.sanitizeRating({ shown: true, at: 7, x: 1 }), { shown: true, at: 7 });
 eq("rating sanitize bad at", G.sanitizeRating({ shown: true, at: "x" }), { shown: true, at: 0 });
 const fmtUS = (a, c, whole) => new Intl.NumberFormat("en-US", Object.assign({ style: "currency", currency: c }, whole ? { maximumFractionDigits: 0 } : {})).format(a);
-eq("share eur whole", G.shareText(187, "EUR", fmtUS), "I kept \u20AC187 by waiting a day before buying. #Wait24h " + G.STORE_URL);
-eq("share eur decimals", G.shareText(42.5, "EUR", fmtUS), "I kept \u20AC42.50 by waiting a day before buying. #Wait24h " + G.STORE_URL);
-eq("share usd", G.shareText(250.4, "USD", fmtUS), "I kept $250 by waiting a day before buying. #Wait24h " + G.STORE_URL);
-eq("share ron", G.shareText(99.99, "RON", fmtUS), "I kept RON\u00A099.99 by waiting a day before buying. #Wait24h " + G.STORE_URL);
-eq("share exact eur text", G.shareText(187, "EUR", fmtUS), "I kept \u20AC187 by waiting a day before buying. #Wait24h https://chromewebstore.google.com/detail/wait-24h/pkgdjohoemjkejcbfbkfobbbjcpdabme");
+eq("share eur whole", G.shareText(187, "EUR", fmtUS), "I kept \u20AC187 by waiting a day before buying. #Wait24h " + G.STORE_URL + "?utm_source=share");
+eq("share eur decimals", G.shareText(42.5, "EUR", fmtUS), "I kept \u20AC42.50 by waiting a day before buying. #Wait24h " + G.STORE_URL + "?utm_source=share");
+eq("share usd", G.shareText(250.4, "USD", fmtUS), "I kept $250 by waiting a day before buying. #Wait24h " + G.STORE_URL + "?utm_source=share");
+eq("share ron", G.shareText(99.99, "RON", fmtUS), "I kept RON\u00A099.99 by waiting a day before buying. #Wait24h " + G.STORE_URL + "?utm_source=share");
+eq("share exact eur text", G.shareText(187, "EUR", fmtUS), "I kept \u20AC187 by waiting a day before buying. #Wait24h https://chromewebstore.google.com/detail/wait-24h/pkgdjohoemjkejcbfbkfobbbjcpdabme?utm_source=share");
 
 print("passed " + pass + ", failed " + fail);
 failures.forEach((f) => print("FAIL " + f));

@@ -208,3 +208,9 @@ unknown price, are always paused.
 - One-time rating prompt in the popup after the 3rd skipped item.
 - "Share" button next to your total copies a short brag line to the clipboard.
 - Options: rate link and a pointer to Meeting Meter.
+
+## Changes in 1.0.2
+
+- Store name now includes a search term (localized via `_locales`; in-product UI keeps the bare name "Wait 24h").
+- Store listing name and summary in 5 languages: en, ro, de, fr, es.
+- Trackable Share link: the copied text ends with `?utm_source=share`.

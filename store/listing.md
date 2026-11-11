@@ -1,29 +1,31 @@
-# Chrome Web Store listing: Wait 24h (v1.0.0)
+# Chrome Web Store listing: Wait 24h (v1.0.2)
 
 Everything below is checked against manifest.json, sites.json, config.js, background.js, README.md, PRIVACY.md and docs/privacy.html. Character counts are stated next to each limited field. Copy only what is inside the code blocks.
 
 ---
 
-## 1. Name (limit 75)
+## 1. Name and short description (shipped inside the package)
 
-```
-Wait 24h – Pause before impulse buys
-```
-Characters: 36
+From 1.0.2 the store takes the item name (limit 75) and short summary (limit 132) from the package's `_locales/<locale>/messages.json` (`extName`, `extDescription`, referenced from manifest.json as `__MSG_extName__` and `__MSG_extDescription__`). Do NOT paste them in the dashboard. They appear in the store after the 1.0.2 review. Exact strings and character counts:
 
-## 2. Short description / summary (limit 132)
+| Locale | Name | Chars | Summary | Chars |
+|---|---|---|---|---|
+| en | Wait 24h – Stop Impulse Buying & Save Money | 43 | Stop impulse buying online. A 24-hour pause before you buy, a reminder tomorrow, and a running total of the money you saved. | 124 |
+| ro | Wait 24h – Oprește cumpărăturile din impuls | 43 | Oprește cumpărăturile din impuls. O pauză de 24 de ore înainte să cumperi, un memento a doua zi și totalul banilor economisiți. | 127 |
+| de | Wait 24h – Impulskäufe stoppen & Geld sparen | 44 | Stoppe Impulskäufe im Netz. 24 Stunden Pause vor dem Kauf, eine Erinnerung am nächsten Tag und die Summe deines gesparten Geldes. | 129 |
+| fr | Wait 24h – Stop aux achats impulsifs | 36 | Stop aux achats impulsifs en ligne. Une pause de 24 heures avant d'acheter, un rappel le lendemain et le total de l'argent épargné. | 131 |
+| es | Wait 24h – Frena las compras impulsivas | 39 | Frena las compras impulsivas online. Una pausa de 24 horas antes de comprar, un recordatorio mañana y el total del dinero ahorrado. | 131 |
 
-```
-Pause before you buy. Get a calm reminder tomorrow and see how much you kept by skipping impulse purchases.
-```
-Characters: 107
+## 2. Rules for the public descriptions
+
+Do not name shop brands in any language's public description or summary. The Chrome Web Store flagged that as keyword spam (violation 'Yellow Argon', Nov 2026). Shop names are fine in the reviewer notes and permission justifications only. Wait 24h's public text contains no shop names at all.
 
 ## 3. Detailed description (EN)
 
-Do not name shop brands in the public description or short description — the Chrome Web Store flagged that as keyword spam (violation 'Yellow Argon', Nov 2026). Shop names are fine in the reviewer notes and permission justifications.
+Opening paragraph replaced for 1.0.2. A "Share" bullet was added to HOW IT WORKS (the Share button for savings; the shared text ends with the store link). Over the 1,200–1,800 target, but within the store's limit.
 
 ```
-Wait 24h adds a small pause between "I want it" and "I bought it".
+Wait 24h helps you stop impulse buying with the 24-hour rule: a short pause before you buy, a reminder tomorrow, and a running total of the money you saved.
 
 When you click Buy now or Add to cart on a supported shop, a calm overlay asks: do you really need this right now? You choose:
 • Remind me tomorrow (or in 12 hours or 2 days, as you set it)
@@ -35,6 +37,7 @@ HOW IT WORKS
 • Savings are tracked per currency and never mixed. Your main currency is the big number in the popup.
 • When a reminder is due, you get a "Still want it?" notification. Then buy it or skip it from the popup.
 • Options: turn shops on or off, pause only above a minimum price, pick a 12 h, 24 h or 2-day delay, or pause the extension for an hour.
+• Share: press "Share" in the popup to copy a short text about your savings, with a link to the extension.
 
 WHERE IT WORKS
 A selection of popular online shops. See the full list, and turn each shop on or off, in Options. Wait 24h is an independent project and is not affiliated with any shop.
@@ -49,27 +52,16 @@ Wait 24h is free and built by one developer. If it helps, you can support it wit
 
 Open source: https://github.com/Overcrasher/wait-24h
 ```
-Characters: 1814 (target 1,200–1,800)
+Characters: 2011
 
 ---
 
-## 4. Romanian translation (ro)
+## 4. Translations (paste per language in the dashboard)
 
-### Name
-```
-Wait 24h – Pauză înainte de cumpărăturile impulsive
-```
-Characters: 51
+### Detailed description (ro, Romanian)
 
-### Short description
 ```
-Fă o pauză înainte să cumperi. Primești o reamintire liniștită mâine și vezi cât ai păstrat renunțând la achizițiile impulsive.
-```
-Characters: 127
-
-### Detailed description
-```
-Wait 24h adaugă o mică pauză între „îl vreau” și „l-am cumpărat”.
+Wait 24h te ajută să oprești cumpărăturile din impuls cu regula celor 24 de ore: o scurtă pauză înainte să cumperi, un memento mâine și totalul banilor economisiți.
 
 Când apeși pe Cumpără acum sau Adaugă în coș într-un magazin acceptat, un mesaj liniștit te întreabă: chiar ai nevoie de asta acum? Alegi tu:
 • Amintește-mi mâine („Remind me tomorrow”) (sau peste 12 ore ori 2 zile, cum ai setat)
@@ -79,8 +71,9 @@ Când apeși pe Cumpără acum sau Adaugă în coș într-un magazin acceptat, u
 CUM FUNCȚIONEAZĂ
 • Banii contează ca economisiți doar când confirmi că ai renunțat la un produs. O simplă reamintire nu economisește nimic până nu decizi.
 • Economiile se țin pe monede și nu se amestecă. Moneda principală este suma mare din fereastra extensiei.
-• Când vine momentul, primești o notificare „Mai vrei produsul?”. Apoi îl cumperi sau renunți din fereastra extensiei.
+• Când vine momentul, primești o notificare „Still want it?”. Apoi îl cumperi sau renunți din fereastra extensiei.
 • Opțiuni: activezi sau dezactivezi magazinele, pui pauză doar peste un preț minim, alegi o întârziere de 12 ore, 24 de ore sau 2 zile ori oprești extensia o oră.
+• Distribuire: apasă „Share” în fereastra extensiei ca să copiezi un text scurt despre economiile tale, cu un link către extensie.
 
 UNDE FUNCȚIONEAZĂ
 Pe o selecție de magazine online populare. Lista completă o găsești în Opțiuni, unde poți activa sau dezactiva fiecare magazin. Wait 24h este un proiect independent și nu este afiliat cu niciun magazin.
@@ -91,20 +84,122 @@ CONFIDENȚIALITATE
 • Doar trei permisiuni: storage, alarms și notifications. Fără acces la toate site-urile.
 
 SUSȚINERE OPȚIONALĂ
-Wait 24h este gratuită și făcută de un singur dezvoltator. Dacă ți-a fost de folos, o poți susține printr-o plată unică (3 €, 5 €, 10 € sau 1% din cât ai economisit), prin Stripe. Propunerea apare în fereastra extensiei doar când economiile trec de 50, 100, 250, 500 sau 1000 în moneda principală, cel mult o dată pe prag, la minimum 30 de zile distanță, niciodată imediat după instalare. Cu „Nu mai întreba” se oprește definitiv. Aceleași linkuri sunt mereu în Opțiuni. Plata se face pe pagina Stripe; extensia nu o vede.
+Wait 24h este gratuită și făcută de un singur dezvoltator. Dacă ți-a fost de folos, o poți susține printr-o plată unică (3 €, 5 €, 10 € sau 1% din cât ai economisit), prin Stripe. Propunerea apare în fereastra extensiei doar când economiile trec de 50, 100, 250, 500 sau 1000 în moneda principală, cel mult o dată pe prag, la minimum 30 de zile distanță, niciodată imediat după instalare. Cu „Don't ask again” se oprește definitiv. Aceleași linkuri sunt mereu în Opțiuni. Plata se face pe pagina Stripe; extensia nu o vede.
 
 Interfața extensiei este în limba engleză.
 
 Cod sursă deschis: https://github.com/Overcrasher/wait-24h
 ```
-Characters: 2101
+Characters: 2328
+
+### Detailed description (de, German)
+
+```
+Wait 24h hilft dir, Impulskäufe mit der 24-Stunden-Regel zu stoppen: eine kurze Pause vor dem Kauf, eine Erinnerung am nächsten Tag und eine laufende Summe des Geldes, das du gespart hast.
+
+Wenn du in einem unterstützten Shop auf „Jetzt kaufen“ oder „In den Warenkorb“ klickst, fragt dich ein ruhiges Overlay: Brauchst du das wirklich jetzt? Du entscheidest:
+• Erinnere mich morgen („Remind me tomorrow“) (oder in 12 Stunden bzw. 2 Tagen, wie eingestellt)
+• Ich brauche das, weiter („I need this, continue“)
+• Egal, ich verzichte („Never mind, I'll skip it“)
+
+SO FUNKTIONIERT ES
+• Geld zählt nur dann als gespart, wenn du bestätigst, dass du auf einen Artikel verzichtet hast. Eine bloße Erinnerung spart nichts, bis du dich entscheidest.
+• Ersparnisse werden pro Währung erfasst und nie vermischt. Deine Hauptwährung ist die große Zahl im Popup.
+• Wenn eine Erinnerung fällig ist, erhältst du die Benachrichtigung „Still want it?“. Danach kaufst du den Artikel oder verzichtest im Popup darauf.
+• Optionen: Shops ein- oder ausschalten, nur oberhalb eines Mindestpreises pausieren, eine Verzögerung von 12 Stunden, 24 Stunden oder 2 Tagen wählen oder die Erweiterung für eine Stunde pausieren.
+• Teilen: Mit „Share“ im Popup kopierst du einen kurzen Text über deine Ersparnisse, mit einem Link zur Erweiterung.
+
+WO ES FUNKTIONIERT
+Auf einer Auswahl beliebter Online-Shops. Die vollständige Liste siehst du in den Optionen, wo du jeden Shop ein- oder ausschalten kannst. Wait 24h ist ein unabhängiges Projekt und mit keinem Shop verbunden.
+
+DATENSCHUTZ
+• Alles bleibt auf deinem Gerät, im lokalen Erweiterungsspeicher deines Browsers.
+• Keine Werbung, kein Tracking, keine Analysen, keine Konten und keine Netzwerkanfragen der Erweiterung.
+• Nur drei Berechtigungen: storage, alarms und notifications. Kein Zugriff auf alle Websites.
+
+FREIWILLIGE UNTERSTÜTZUNG
+Wait 24h ist kostenlos und von einem einzelnen Entwickler gebaut. Wenn sie dir hilft, kannst du sie mit einer einmaligen Zahlung unterstützen (3 €, 5 €, 10 € oder 1 % deiner Ersparnisse) über Stripe. Die Bitte erscheint im Popup nur, wenn deine Ersparnisse in deiner Hauptwährung 50, 100, 250, 500 oder 1000 überschreiten, höchstens einmal pro Schwelle und mit mindestens 30 Tagen Abstand, nie direkt nach der Installation. Wähle „Don't ask again“, und sie hört für immer auf. Dieselben Links findest du immer in den Optionen. Die Zahlung läuft auf der Seite von Stripe; die Erweiterung sieht sie nie.
+
+Die Oberfläche der Erweiterung ist auf Englisch.
+
+Open Source: https://github.com/Overcrasher/wait-24h
+```
+Characters: 2565
+
+### Detailed description (fr, French)
+
+```
+Wait 24h vous aide à arrêter les achats impulsifs grâce à la règle des 24 heures : une courte pause avant d'acheter, un rappel demain et le total cumulé de l'argent que vous avez économisé.
+
+Quand vous cliquez sur « Acheter maintenant » ou « Ajouter au panier » dans une boutique prise en charge, un message calme vous demande : en avez-vous vraiment besoin tout de suite ? Vous choisissez :
+• Me le rappeler demain (« Remind me tomorrow ») (ou dans 12 heures ou 2 jours, selon votre réglage)
+• J'en ai besoin, continuer (« I need this, continue »)
+• Tant pis, j'y renonce (« Never mind, I'll skip it »)
+
+COMMENT ÇA MARCHE
+• L'argent n'est compté comme économisé que lorsque vous confirmez avoir renoncé à un article. Se faire rappeler plus tard n'économise rien tant que vous n'avez pas décidé.
+• Les économies sont suivies par devise et jamais mélangées. Votre devise principale est le grand chiffre dans la fenêtre de l'extension.
+• Quand un rappel arrive à échéance, vous recevez une notification « Still want it? ». Vous achetez ensuite l'article ou y renoncez depuis la fenêtre de l'extension.
+• Options : activer ou désactiver des boutiques, ne faire la pause qu'au-dessus d'un prix minimum, choisir un délai de 12 h, 24 h ou 2 jours, ou mettre l'extension en pause pendant une heure.
+• Partage : « Share » dans la fenêtre de l'extension copie un court texte sur vos économies, avec un lien vers l'extension.
+
+OÙ ÇA FONCTIONNE
+Sur une sélection de boutiques en ligne populaires. Retrouvez la liste complète, et activez ou désactivez chaque boutique, dans les Options. Wait 24h est un projet indépendant, sans affiliation avec aucune boutique.
+
+CONFIDENTIALITÉ
+• Tout reste sur votre appareil, dans le stockage local de l'extension de votre navigateur.
+• Aucune publicité, aucun suivi, aucune analyse, aucun compte et aucune requête réseau de l'extension.
+• Seulement trois autorisations : storage, alarms et notifications. Aucun accès à tous les sites.
+
+SOUTIEN FACULTATIF
+Wait 24h est gratuite et conçue par un seul développeur. Si elle vous est utile, vous pouvez la soutenir par un paiement unique (3 €, 5 €, 10 € ou 1 % de ce que vous avez économisé) via Stripe. La demande n'apparaît dans la fenêtre de l'extension que lorsque vos économies dépassent 50, 100, 250, 500 ou 1000 dans votre devise principale, au plus une fois par palier et à 30 jours d'intervalle, jamais juste après l'installation. Choisissez « Don't ask again » et elle s'arrête définitivement. Les mêmes liens sont toujours dans les Options. Le paiement se fait sur la page de Stripe ; l'extension ne le voit jamais.
+
+L'interface de l'extension est en anglais.
+
+Code source ouvert : https://github.com/Overcrasher/wait-24h
+```
+Characters: 2702
+
+### Detailed description (es, Spanish)
+
+```
+Wait 24h te ayuda a frenar las compras impulsivas con la regla de las 24 horas: una pausa breve antes de comprar, un recordatorio mañana y el total acumulado del dinero que has ahorrado.
+
+Cuando haces clic en «Comprar ahora» o «Añadir al carrito» en una tienda compatible, un aviso tranquilo te pregunta: ¿de verdad lo necesitas ahora mismo? Tú eliges:
+• Recuérdamelo mañana («Remind me tomorrow») (o en 12 horas o 2 días, según lo configures)
+• Lo necesito, continuar («I need this, continue»)
+• Da igual, lo dejo («Never mind, I'll skip it»)
+
+CÓMO FUNCIONA
+• El dinero cuenta como ahorrado solo cuando confirmas que has renunciado a un artículo. Un simple recordatorio no ahorra nada hasta que decides.
+• Los ahorros se registran por moneda y nunca se mezclan. Tu moneda principal es la cifra grande de la ventana de la extensión.
+• Cuando un recordatorio vence, recibes una notificación «Still want it?». Después compras el artículo o renuncias a él desde la ventana de la extensión.
+• Opciones: activar o desactivar tiendas, pausar solo por encima de un precio mínimo, elegir una demora de 12 h, 24 h o 2 días, o pausar la extensión durante una hora.
+• Compartir: «Share» en la ventana de la extensión copia un texto breve sobre tus ahorros, con un enlace a la extensión.
+
+DÓNDE FUNCIONA
+En una selección de tiendas online populares. Consulta la lista completa, y activa o desactiva cada tienda, en Opciones. Wait 24h es un proyecto independiente y no está afiliado a ninguna tienda.
+
+PRIVACIDAD
+• Todo se queda en tu dispositivo, en el almacenamiento local de extensiones de tu navegador.
+• Sin anuncios, sin seguimiento, sin analítica, sin cuentas y sin solicitudes de red por parte de la extensión.
+• Solo tres permisos: storage, alarms y notifications. Sin acceso a todos los sitios.
+
+APOYO OPCIONAL
+Wait 24h es gratuita y la ha creado un solo desarrollador. Si te resulta útil, puedes apoyarla con un pago único (3 €, 5 €, 10 € o el 1 % de lo que has ahorrado) a través de Stripe. La petición aparece en la ventana de la extensión solo cuando tus ahorros superan 50, 100, 250, 500 o 1000 en tu moneda principal, como máximo una vez por hito y con 30 días de separación, nunca justo después de instalar. Elige «Don't ask again» y se detiene para siempre. Los mismos enlaces están siempre en Opciones. El pago se hace en la página de Stripe; la extensión nunca lo ve.
+
+La interfaz de la extensión está en inglés.
+
+Código abierto: https://github.com/Overcrasher/wait-24h
+```
+Characters: 2476
 
 ---
 
 ## 5. Category and language
 
 - Category: Shopping. Justification: the extension acts only on online-shop pages at the moment of purchase, so people looking for shopping tools will find it there (Productivity would be the runner-up).
-- Language: English (default); Romanian (ro) as an added localized listing.
+- Languages: English (default); Romanian (ro), German (de), French (fr) and Spanish (es) as added localized listings (new in 1.0.2).
 
 ## 6. Single purpose statement (Privacy practices tab)
 
@@ -208,8 +303,16 @@ Permissions: storage, alarms, notifications. No host_permissions, no tabs permis
 - [ ] Register a Chrome Web Store developer account (one-time US$5 fee) and verify the contact email.
 - [ ] Confirm GitHub Pages is live: https://overcrasher.github.io/wait-24h/privacy.html and thanks.html both open.
 - [ ] Upload 5 screenshots (1280x800 or 640x400) matching the captions above, plus the small promo tile (440x280); marquee tile (1400x560) is optional.
-- [ ] Paste name, short description, detailed description (EN and RO), category, single purpose, permission justifications, data disclosures and reviewer notes.
+- [ ] Paste the detailed description in each language (EN, RO, DE, FR, ES; name and short summary come from the package), category, single purpose, permission justifications, data disclosures and reviewer notes.
 - [ ] Tick the three certification statements and set remote code to No.
 - [ ] Set visibility (Public) and distribution regions, then submit for review.
 
 Published store URL: https://chromewebstore.google.com/detail/wait-24h/pkgdjohoemjkejcbfbkfobbbjcpdabme
+
+## 13. 1.0.2 submission steps
+
+- [ ] Upload `dist/wait-24h-1.0.2.zip` (Package tab, upload new package).
+- [ ] In Store listing, choose each language from the language dropdown (English, Romanian, German, French, Spanish) and paste its detailed description from sections 3 and 4. Name and summary are not pasted: they come from `_locales` in the package.
+- [ ] Add the YouTube promo video URL if available.
+- [ ] In Account, set the publisher name to Quantumbyte Labs.
+- [ ] Submit for review.
